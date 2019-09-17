@@ -52,12 +52,12 @@ mod tests {
             }
         }
 
-        fn blake2_compress(
+        fn blake2b_compress(
             &self,
             rounds: u64,
-            h_starting_state: Vec<u64>,
-            block: Vec<u8>,
-            t_offset_counters: Vec<u64>,
+            h_starting_state: &[u64],
+            block: &[u8],
+            t_offset_counters: &[u64],
             final_block_flag: bool,
         ) -> Vec<u8> {
             use pyo3::types::PyTuple;
@@ -69,7 +69,7 @@ mod tests {
             let final_block_flag = final_block_flag.to_object(self.py);
 
             let result = self.module.call(
-                "blake2_compress",
+                "blake2b_compress",
                 (
                     rounds,
                     h_starting_state,
@@ -83,7 +83,7 @@ mod tests {
             match result {
                 Err(e) => {
                     e.print(self.py);
-                    panic!("Python exception when calling blake2_compress");
+                    panic!("Python exception when calling blake2b_compress");
                 }
                 Ok(any) => match any.extract() {
                     Err(e) => {
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn test_py_extract_blake2b_parameters() {
+    fn test_py_blake2b_compress() {
         let gil = Python::acquire_gil();
         let py = gil.python();
         let blake2 = PyBlake2::new(py);
@@ -123,7 +123,21 @@ mod tests {
 
         for (inp, expected) in examples {
             let input_bytes = hex::decode(inp).unwrap();
+
             let blake2_params = blake2.extract_blake2b_parameters(&input_bytes);
+
+            let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
+                blake2_params;
+
+            let result_bytes = blake2.blake2b_compress(
+                rounds,
+                &h_starting_state,
+                &block,
+                &t_offset_counters,
+                final_block_flag,
+            );
+
+            assert_eq!(hex::encode(result_bytes), expected);
         }
     }
 }
