@@ -8,12 +8,12 @@ mod tests {
 
     use super::*;
 
+    type TFCompressArgs = (u64, Vec<u64>, Vec<u8>, Vec<u64>, bool);
+
     pub struct PyBlake2<'a> {
         py: Python<'a>,
         module: &'a PyModule,
     }
-
-    type TFCompressArgs = (u64, Vec<u64>, Vec<u8>, Vec<u64>, bool);
 
     impl<'a> PyBlake2<'a> {
         fn new(py: Python<'a>) -> Self {
