@@ -2,6 +2,173 @@ extern crate pyo3;
 
 use pyo3::prelude::*;
 
+const SIGMA_SCHEDULE: [[usize; 16]; 10] = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
+    [11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4],
+    [7, 9, 3, 1, 13, 12, 11, 14, 2, 6, 5, 10, 4, 0, 15, 8],
+    [9, 0, 5, 7, 2, 4, 10, 15, 14, 1, 11, 12, 6, 8, 3, 13],
+    [2, 12, 6, 10, 0, 11, 8, 3, 4, 13, 7, 5, 15, 14, 1, 9],
+    [12, 5, 1, 15, 14, 13, 4, 10, 0, 7, 6, 3, 9, 2, 8, 11],
+    [13, 11, 7, 14, 12, 1, 3, 9, 5, 0, 15, 4, 8, 6, 2, 10],
+    [6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5],
+    [10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0],
+];
+const SIGMA_SCHEDULE_LEN: usize = 10;
+
+const WORDBITS: u8 = 64;
+const MASKBITS: u64 = u64::max_value();
+
+const IV: [u64; 8] = [
+    0x6a09e667f3bcc908,
+    0xbb67ae8584caa73b,
+    0x3c6ef372fe94f82b,
+    0xa54ff53a5f1d36f1,
+    0x510e527fade682d1,
+    0x9b05688c2b3e6c1f,
+    0x1f83d9abfb41bd6b,
+    0x5be0cd19137e2179,
+];
+
+const ROT1: u8 = 32;
+const ROT2: u8 = 24;
+const ROT3: u8 = 16;
+const ROT4: u8 = 63;
+
+const WB_ROT1: u8 = WORDBITS - ROT1;
+const WB_ROT2: u8 = WORDBITS - ROT2;
+const WB_ROT3: u8 = WORDBITS - ROT3;
+const WB_ROT4: u8 = WORDBITS - ROT4;
+
+#[inline]
+fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
+    use std::convert::TryInto;
+
+    [
+        u64::from_le_bytes((&input[..8]).try_into().unwrap()),
+        u64::from_le_bytes((&input[8..16]).try_into().unwrap()),
+        u64::from_le_bytes((&input[16..24]).try_into().unwrap()),
+        u64::from_le_bytes((&input[24..32]).try_into().unwrap()),
+        u64::from_le_bytes((&input[32..40]).try_into().unwrap()),
+        u64::from_le_bytes((&input[40..48]).try_into().unwrap()),
+        u64::from_le_bytes((&input[48..56]).try_into().unwrap()),
+        u64::from_le_bytes((&input[56..64]).try_into().unwrap()),
+        u64::from_le_bytes((&input[64..72]).try_into().unwrap()),
+        u64::from_le_bytes((&input[72..80]).try_into().unwrap()),
+        u64::from_le_bytes((&input[80..88]).try_into().unwrap()),
+        u64::from_le_bytes((&input[88..96]).try_into().unwrap()),
+        u64::from_le_bytes((&input[96..104]).try_into().unwrap()),
+        u64::from_le_bytes((&input[104..112]).try_into().unwrap()),
+        u64::from_le_bytes((&input[112..120]).try_into().unwrap()),
+        u64::from_le_bytes((&input[120..128]).try_into().unwrap()),
+    ]
+}
+
+pub fn blake2b_compress(
+    num_rounds: usize,
+    h_starting_state: (u64, u64, u64, u64, u64, u64, u64, u64),
+    block: &[u8],
+    t_offset_counters: (u64, u64),
+    final_block_flag: bool,
+) -> [u8; 64] {
+    let m = block_to_16_le_words(block);
+
+    let mut v = [
+        h_starting_state.0,          // 0
+        h_starting_state.1,          // 1
+        h_starting_state.2,          // 2
+        h_starting_state.3,          // 3
+        h_starting_state.4,          // 4
+        h_starting_state.5,          // 5
+        h_starting_state.6,          // 6
+        h_starting_state.7,          // 7
+        IV[0],                       // 8
+        IV[1],                       // 9
+        IV[2],                       // 10
+        IV[3],                       // 11
+        t_offset_counters.0 ^ IV[4], // 12
+        t_offset_counters.1 ^ IV[5], // 13
+        if final_block_flag {
+            MASKBITS ^ IV[6]
+        } else {
+            IV[6]
+        }, // 14
+        IV[7],                       // 15
+    ];
+
+    macro_rules! blake2b_G {
+        ($v:ident, $a:expr, $b:expr, $c:expr, $d:expr, $msri2:ident, $msri21:ident) => {{
+            let mut va = $v[$a];
+            let mut vb = $v[$b];
+            let mut vc = $v[$c];
+            let mut vd = $v[$d];
+            va = (va + vb + $msri2) & MASKBITS;
+            let mut w = vd ^ va;
+            vd = (w >> ROT1) | (w << (WB_ROT1)) & MASKBITS;
+            vc = (vc + vd) & MASKBITS;
+            w = vb ^ vc;
+            vb = (w >> ROT2) | (w << (WB_ROT2)) & MASKBITS;
+            va = (va + vb + $msri21) & MASKBITS;
+            w = vd ^ va;
+            vd = (w >> ROT3) | (w << (WB_ROT3)) & MASKBITS;
+            vc = (vc + vd) & MASKBITS;
+            w = vb ^ vc;
+            vb = (w >> ROT4) | (w << (WB_ROT4)) & MASKBITS;
+            $v[$a] = va;
+            $v[$b] = vb;
+            $v[$c] = vc;
+            $v[$d] = vd;
+        }};
+    }
+
+    for r in 0..num_rounds {
+        let sr = &SIGMA_SCHEDULE[r % SIGMA_SCHEDULE_LEN];
+        let msri2 = m[sr[0]];
+        let msri21 = m[sr[1]];
+        blake2b_G!(v, 0, 4, 8, 12, msri2, msri21);
+        let msri2 = m[sr[2]];
+        let msri21 = m[sr[3]];
+        blake2b_G!(v, 1, 5, 9, 13, msri2, msri21);
+        let msri2 = m[sr[4]];
+        let msri21 = m[sr[5]];
+        blake2b_G!(v, 2, 6, 10, 14, msri2, msri21);
+        let msri2 = m[sr[6]];
+        let msri21 = m[sr[7]];
+        blake2b_G!(v, 3, 7, 11, 15, msri2, msri21);
+        let msri2 = m[sr[8]];
+        let msri21 = m[sr[9]];
+        blake2b_G!(v, 0, 5, 10, 15, msri2, msri21);
+        let msri2 = m[sr[10]];
+        let msri21 = m[sr[11]];
+        blake2b_G!(v, 1, 6, 11, 12, msri2, msri21);
+        let msri2 = m[sr[12]];
+        let msri21 = m[sr[13]];
+        blake2b_G!(v, 2, 7, 8, 13, msri2, msri21);
+        let msri2 = m[sr[14]];
+        let msri21 = m[sr[15]];
+        blake2b_G!(v, 3, 4, 9, 14, msri2, msri21);
+    }
+
+    let result_message_word_bytes = [
+        (h_starting_state.0 ^ v[0] ^ v[8]).to_le_bytes(),
+        (h_starting_state.1 ^ v[1] ^ v[9]).to_le_bytes(),
+        (h_starting_state.2 ^ v[2] ^ v[10]).to_le_bytes(),
+        (h_starting_state.3 ^ v[3] ^ v[11]).to_le_bytes(),
+        (h_starting_state.4 ^ v[4] ^ v[12]).to_le_bytes(),
+        (h_starting_state.5 ^ v[5] ^ v[13]).to_le_bytes(),
+        (h_starting_state.6 ^ v[6] ^ v[14]).to_le_bytes(),
+        (h_starting_state.7 ^ v[7] ^ v[15]).to_le_bytes(),
+    ];
+    let mut result = [0u8; 64];
+    for (i, word_bytes) in result_message_word_bytes.into_iter().enumerate() {
+        for (j, x) in word_bytes.into_iter().enumerate() {
+            result[i * 8 + j] = *x;
+        }
+    }
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     extern crate hex;
