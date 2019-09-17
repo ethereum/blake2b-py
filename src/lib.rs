@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn test_py_blake2b_compress() {
+    fn test_py_blake2b_compress_success() {
         let gil = Python::acquire_gil();
         let py = gil.python();
         let blake2 = PyBlake2::new(py);
@@ -100,9 +100,9 @@ mod tests {
         for (inp, expected) in examples {
             let input_bytes = hex::decode(inp).unwrap();
 
-            let blake2_params = blake2.extract_blake2b_parameters(&input_bytes);
+            let blake2_params = blake2.extract_blake2b_parameters(&input_bytes).unwrap();
             let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
-                blake2_params.unwrap();
+                blake2_params;
 
             let result_bytes = blake2
                 .blake2b_compress(
@@ -115,6 +115,30 @@ mod tests {
                 .unwrap();
 
             assert_eq!(hex::encode(result_bytes), expected);
+        }
+    }
+
+    #[test]
+    fn test_py_extract_blake2b_parameters() {
+        use pyo3::exceptions::ValueError;
+
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let blake2 = PyBlake2::new(py);
+
+        let examples = vec![
+            "",
+            "00000c48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
+            "000000000c48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
+            "0000000c48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000002",
+        ];
+
+        for inp in examples {
+            let input_bytes = hex::decode(inp).unwrap();
+
+            let err = blake2.extract_blake2b_parameters(&input_bytes).unwrap_err();
+
+            assert!(err.is_instance::<ValueError>(py));
         }
     }
 }

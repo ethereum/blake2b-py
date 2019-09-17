@@ -34,10 +34,6 @@ TMessageBlock = Tuple[int, int, int, int, int, int, int, int]
 TFCompressArgs = Tuple[int, TMessageBlock, bytes, Tuple[int, int], bool]
 
 
-class ValidationError(Exception):
-    pass
-
-
 def big_endian_to_int(value: bytes) -> int:
     return int.from_bytes(value, "big")
 
@@ -74,7 +70,7 @@ def to_int(
 def extract_blake2b_parameters(input_bytes: bytes) -> TFCompressArgs:
     num_bytes = len(input_bytes)
     if num_bytes != 213:
-        raise ValidationError(
+        raise ValueError(
             f"input length for Blake2 F precompile should be exactly 213 bytes, got: {num_bytes}"
         )
 
@@ -92,7 +88,7 @@ def extract_blake2b_parameters(input_bytes: bytes) -> TFCompressArgs:
     elif final_block_int == 1:
         final_block_flag = True
     else:
-        raise ValidationError(
+        raise ValueError(
             f"incorrect final block indicator flag, needed 0 or 1, got: {final_block_int}"
         )
 
@@ -102,7 +98,7 @@ def extract_blake2b_parameters(input_bytes: bytes) -> TFCompressArgs:
 def _get_64_bit_little_endian_words(compact_bytes: bytes) -> Iterable[int]:
     remaining_bytes = compact_bytes
     if len(remaining_bytes) % 8 != 0:
-        raise ValidationError(
+        raise ValueError(
             "Must send bytes in multiples of 8 to get 64-bit words, got length "
             f"{len(remaining_bytes)}"
         )
