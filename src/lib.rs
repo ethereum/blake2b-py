@@ -123,7 +123,7 @@ mod tests {
 
         for (inp, expected) in examples {
             let input_bytes = hex::decode(inp).unwrap();
-            let blake2_params = blake2.extract_blake2b_parameters(&input_bytes)
+            let blake2_params = blake2.extract_blake2b_parameters(&input_bytes);
         }
     }
 }
