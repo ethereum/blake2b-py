@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn test_py_extract_blake2b_parameters() {
+    fn test_py_extract_blake2b_parameters_error() {
         use pyo3::exceptions::ValueError;
 
         let gil = Python::acquire_gil();
