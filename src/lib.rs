@@ -28,28 +28,16 @@ mod tests {
             }
         }
 
-        fn extract_blake2b_parameters(&self, input_bytes: &[u8]) -> TFCompressArgs {
+        fn extract_blake2b_parameters(&self, input_bytes: &[u8]) -> PyResult<TFCompressArgs> {
             use pyo3::types::PyBytes;
 
             let input_bytes = PyBytes::new(self.py, input_bytes);
 
-            let result = self
+            let py_val = self
                 .module
-                .call("extract_blake2b_parameters", (input_bytes,), None);
+                .call("extract_blake2b_parameters", (input_bytes,), None)?;
 
-            match result {
-                Err(e) => {
-                    e.print(self.py);
-                    panic!("Python exception when calling extract_blake2b_parameters");
-                }
-                Ok(any) => match any.extract() {
-                    Err(e) => {
-                        e.print(self.py);
-                        panic!("Python exception when converting result");
-                    }
-                    Ok(val) => val,
-                },
-            }
+            py_val.extract()
         }
 
         fn blake2b_compress(
@@ -59,7 +47,7 @@ mod tests {
             block: &[u8],
             t_offset_counters: &[u64],
             final_block_flag: bool,
-        ) -> Vec<u8> {
+        ) -> PyResult<Vec<u8>> {
             use pyo3::types::PyTuple;
 
             let rounds = rounds.to_object(self.py);
@@ -68,7 +56,7 @@ mod tests {
             let t_offset_counters = PyTuple::new(self.py, t_offset_counters);
             let final_block_flag = final_block_flag.to_object(self.py);
 
-            let result = self.module.call(
+            let py_val = self.module.call(
                 "blake2b_compress",
                 (
                     rounds,
@@ -78,21 +66,9 @@ mod tests {
                     final_block_flag,
                 ),
                 None,
-            );
+            )?;
 
-            match result {
-                Err(e) => {
-                    e.print(self.py);
-                    panic!("Python exception when calling blake2b_compress");
-                }
-                Ok(any) => match any.extract() {
-                    Err(e) => {
-                        e.print(self.py);
-                        panic!("Python exception when converting result");
-                    }
-                    Ok(val) => val,
-                },
-            }
+            py_val.extract()
         }
     }
 
@@ -126,15 +102,17 @@ mod tests {
 
             let blake2_params = blake2.extract_blake2b_parameters(&input_bytes);
             let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
-                blake2_params;
+                blake2_params.unwrap();
 
-            let result_bytes = blake2.blake2b_compress(
-                rounds,
-                &h_starting_state,
-                &block,
-                &t_offset_counters,
-                final_block_flag,
-            );
+            let result_bytes = blake2
+                .blake2b_compress(
+                    rounds,
+                    &h_starting_state,
+                    &block,
+                    &t_offset_counters,
+                    final_block_flag,
+                )
+                .unwrap();
 
             assert_eq!(hex::encode(result_bytes), expected);
         }
