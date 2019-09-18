@@ -360,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rust_blake2b_compress_success() {
+    fn test_blake2b_compress_success() {
         for (inp, expected) in FAST_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
             let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
@@ -390,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rust_blake2b_compress_slow() {
+    fn test_blake2b_compress_slow() {
         for (inp, expected) in SLOW_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
             let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
@@ -421,7 +421,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_rust_blake2b_compress_2_pow_32_rounds() {
+    fn test_blake2b_compress_eip_152_vec_8() {
         let (inp, expected) = ( // 2 ** 32 - 1 rounds
             "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
             "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01846e6b5df8cc7703041bbceb571de6631d2615",
@@ -453,7 +453,7 @@ mod tests {
 
         if let Ok(elapsed) = t_start.elapsed() {
             eprintln!(
-                "test_rust_blake2b_compress_2_pow_32_rounds: took {} secs",
+                "test_blake2b_compress_eip_152_vec_8: took {} secs",
                 elapsed.as_secs()
             );
         }
