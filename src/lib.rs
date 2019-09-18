@@ -419,6 +419,7 @@ mod tests {
         }
     }
 
+    /// Check test vector 8 from EIP 152 (https://eips.ethereum.org/EIPS/eip-152#test-vector-8)
     #[test]
     #[ignore]
     fn test_blake2b_compress_eip_152_vec_8() {
