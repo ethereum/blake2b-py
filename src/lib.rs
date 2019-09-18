@@ -314,7 +314,6 @@ mod tests {
 
         for (inp, expected) in FAST_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-
             let blake2_params = blake2.extract_blake2b_parameters(&input_bytes).unwrap();
             let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
                 blake2_params;
@@ -354,12 +353,11 @@ mod tests {
     fn test_rust_blake2b_compress_success() {
         for (inp, expected) in FAST_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-
             let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
             let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
                 blake2_params;
 
-            let rust_result_bytes = blake2b_compress(
+            let result_bytes = blake2b_compress(
                 rounds,
                 (
                     h_starting_state[0],
@@ -377,7 +375,7 @@ mod tests {
             )
             .to_vec();
 
-            assert_eq!(hex::encode(rust_result_bytes), *expected);
+            assert_eq!(hex::encode(result_bytes), *expected);
         }
     }
 
@@ -385,12 +383,11 @@ mod tests {
     fn test_rust_blake2b_compress_slow() {
         for (inp, expected) in SLOW_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-
             let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
             let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
                 blake2_params;
 
-            let rust_result_bytes = blake2b_compress(
+            let result_bytes = blake2b_compress(
                 rounds,
                 (
                     h_starting_state[0],
@@ -408,7 +405,7 @@ mod tests {
             )
             .to_vec();
 
-            assert_eq!(hex::encode(rust_result_bytes), *expected);
+            assert_eq!(hex::encode(result_bytes), *expected);
         }
     }
 
