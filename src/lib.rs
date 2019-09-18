@@ -20,7 +20,7 @@ const SIGMA_SCHEDULE: [[usize; 16]; SIGMA_SCHEDULE_LEN] = [
     [10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0],
 ];
 
-const WORDBITS: u8 = 64;
+const WORDBITS: usize = 64;
 const MASKBITS: u64 = u64::max_value();
 
 const IV: [u64; 8] = [
@@ -34,15 +34,10 @@ const IV: [u64; 8] = [
     0x5be0cd19137e2179,
 ];
 
-const ROT1: u8 = 32;
-const ROT2: u8 = 24;
-const ROT3: u8 = 16;
-const ROT4: u8 = 63;
-
-const WB_ROT1: u8 = WORDBITS - ROT1;
-const WB_ROT2: u8 = WORDBITS - ROT2;
-const WB_ROT3: u8 = WORDBITS - ROT3;
-const WB_ROT4: u8 = WORDBITS - ROT4;
+const ROT1: usize = 32;
+const ROT2: usize = 24;
+const ROT3: usize = 16;
+const ROT4: usize = 63;
 
 #[inline]
 fn u64_from_le(input: &[u8]) -> u64 {
@@ -111,33 +106,24 @@ fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
     ]
 }
 
+/// Rotate the bits in the unsigned 64-bit int `x` right `n` bits.
+#[inline]
+fn rotate_bits(x: u64, n: usize) -> u64 {
+    (x >> n) ^ (x << (WORDBITS - n))
+}
+
 macro_rules! G {
     ($v:ident, $a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $y:expr) => {{
-        let mut va = $v[$a];
-        let mut vb = $v[$b];
-        let mut vc = $v[$c];
-        let mut vd = $v[$d];
-
         // RFC 7693 includes the use of mod operators in this section.  We don't need them since
         // mod is implied by u32 and u64 arithmetic.
-        let mut w;
-        va = va + vb + $x;
-        w = vd ^ va;
-        vd = (w >> ROT1) ^ (w << (WB_ROT1));
-        vc = vc + vd;
-        w = vb ^ vc;
-        vb = (w >> ROT2) ^ (w << (WB_ROT2));
-        va = va + vb + $y;
-        w = vd ^ va;
-        vd = (w >> ROT3) ^ (w << (WB_ROT3));
-        vc = vc + vd;
-        w = vb ^ vc;
-        vb = (w >> ROT4) ^ (w << (WB_ROT4));
-
-        $v[$a] = va;
-        $v[$b] = vb;
-        $v[$c] = vc;
-        $v[$d] = vd;
+        $v[$a] = $v[$a] + $v[$b] + $x;
+        $v[$d] = rotate_bits($v[$d] ^ $v[$a], ROT1);
+        $v[$c] = $v[$c] + $v[$d];
+        $v[$b] = rotate_bits($v[$b] ^ $v[$c], ROT2);
+        $v[$a] = $v[$a] + $v[$b] + $y;
+        $v[$d] = rotate_bits($v[$d] ^ $v[$a], ROT3);
+        $v[$c] = $v[$c] + $v[$d];
+        $v[$b] = rotate_bits($v[$b] ^ $v[$c], ROT4);
     }};
 }
 
