@@ -1,3 +1,5 @@
+#![feature(test)]
+
 extern crate pyo3;
 
 use std::convert::TryInto;
@@ -294,6 +296,10 @@ mod tests {
             "001e848048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
             "a86f2348a6afc9a7ccb3ae6e92818eb34f57f4e0d618580efa1c9b0a35ea84998c22afe92c41e4b538f213f8f35deb37e47fc6a8eca34f645da18231f59c6190",
         ),
+        ( // 8,000,000 rounds
+            "007a120048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
+            "6d2ce9e534d50e18ff866ae92d70cceba79bbcd14c63819fe48752c8aca87a4bb7dcc230d22a4047f0486cfcfb50a17b24b2899eb8fca370f22240adb5170189",
+        ),
         //( // 2 ** 32 rounds (takes about 2 mins on dev's machine)
         //    "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
         //    "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01846e6b5df8cc7703041bbceb571de6631d2615",
@@ -404,5 +410,64 @@ mod tests {
 
             assert_eq!(hex::encode(rust_result_bytes), *expected);
         }
+    }
+
+    extern crate test;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_blake2b_compress_2_000_000(b: &mut Bencher) {
+        let input_bytes = hex::decode("001e848048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
+
+        let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+        let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) = blake2_params;
+
+        b.iter(|| {
+            blake2b_compress(
+                rounds,
+                (
+                    h_starting_state[0],
+                    h_starting_state[1],
+                    h_starting_state[2],
+                    h_starting_state[3],
+                    h_starting_state[4],
+                    h_starting_state[5],
+                    h_starting_state[6],
+                    h_starting_state[7],
+                ),
+                &block,
+                (t_offset_counters[0], t_offset_counters[1]),
+                final_block_flag,
+            )
+            .to_vec()
+        });
+    }
+
+    #[bench]
+    fn bench_blake2b_compress_8_000_000(b: &mut Bencher) {
+        let input_bytes = hex::decode("007a120048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
+
+        let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+        let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) = blake2_params;
+
+        b.iter(|| {
+            blake2b_compress(
+                rounds,
+                (
+                    h_starting_state[0],
+                    h_starting_state[1],
+                    h_starting_state[2],
+                    h_starting_state[3],
+                    h_starting_state[4],
+                    h_starting_state[5],
+                    h_starting_state[6],
+                    h_starting_state[7],
+                ),
+                &block,
+                (t_offset_counters[0], t_offset_counters[1]),
+                final_block_flag,
+            )
+            .to_vec()
+        });
     }
 }
