@@ -300,10 +300,6 @@ mod tests {
             "007a120048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
             "6d2ce9e534d50e18ff866ae92d70cceba79bbcd14c63819fe48752c8aca87a4bb7dcc230d22a4047f0486cfcfb50a17b24b2899eb8fca370f22240adb5170189",
         ),
-        //( // 2 ** 32 rounds (takes about 2 mins on dev's machine)
-        //    "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
-        //    "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01846e6b5df8cc7703041bbceb571de6631d2615",
-        //),
     ];
 
     #[test]
@@ -407,6 +403,48 @@ mod tests {
 
             assert_eq!(hex::encode(result_bytes), *expected);
         }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_rust_blake2b_compress_2_pow_32_rounds() {
+        let (inp, expected) = ( // 2 ** 32 rounds
+            "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
+            "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01846e6b5df8cc7703041bbceb571de6631d2615",
+        );
+
+        let input_bytes = hex::decode(inp).unwrap();
+        let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+        let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) = blake2_params;
+
+        let t_start = std::time::SystemTime::now();
+
+        let result_bytes = blake2b_compress(
+            rounds,
+            (
+                h_starting_state[0],
+                h_starting_state[1],
+                h_starting_state[2],
+                h_starting_state[3],
+                h_starting_state[4],
+                h_starting_state[5],
+                h_starting_state[6],
+                h_starting_state[7],
+            ),
+            &block,
+            (t_offset_counters[0], t_offset_counters[1]),
+            final_block_flag,
+        )
+        .to_vec();
+
+        if let Ok(elapsed) = t_start.elapsed() {
+            eprintln!(
+                "test_rust_blake2b_compress_2_pow_32_rounds: took {} secs",
+                elapsed.as_secs()
+            );
+        }
+
+        assert_eq!(hex::encode(result_bytes), *expected);
     }
 
     extern crate test;
