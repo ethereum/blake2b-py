@@ -135,34 +135,34 @@ fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) 
 
 pub fn blake2b_compress(
     num_rounds: usize,
-    h_starting_state: (u64, u64, u64, u64, u64, u64, u64, u64),
+    h_starting_state: &[u64],
     block: &[u8],
-    t_offset_counters: (u64, u64),
+    t_offset_counters: &[u64],
     final_block_flag: bool,
 ) -> [u8; 64] {
     let m = block_to_16_le_words(block);
 
     let mut v = [
-        h_starting_state.0,          // 0
-        h_starting_state.1,          // 1
-        h_starting_state.2,          // 2
-        h_starting_state.3,          // 3
-        h_starting_state.4,          // 4
-        h_starting_state.5,          // 5
-        h_starting_state.6,          // 6
-        h_starting_state.7,          // 7
-        IV[0],                       // 8
-        IV[1],                       // 9
-        IV[2],                       // 10
-        IV[3],                       // 11
-        t_offset_counters.0 ^ IV[4], // 12
-        t_offset_counters.1 ^ IV[5], // 13
+        h_starting_state[0],          // 0
+        h_starting_state[1],          // 1
+        h_starting_state[2],          // 2
+        h_starting_state[3],          // 3
+        h_starting_state[4],          // 4
+        h_starting_state[5],          // 5
+        h_starting_state[6],          // 6
+        h_starting_state[7],          // 7
+        IV[0],                        // 8
+        IV[1],                        // 9
+        IV[2],                        // 10
+        IV[3],                        // 11
+        t_offset_counters[0] ^ IV[4], // 12
+        t_offset_counters[1] ^ IV[5], // 13
         if final_block_flag {
             MASKBITS ^ IV[6]
         } else {
             IV[6]
         }, // 14
-        IV[7],                       // 15
+        IV[7],                        // 15
     ];
 
     for r in 0..num_rounds {
@@ -180,14 +180,14 @@ pub fn blake2b_compress(
     }
 
     let result_message_word_bytes = [
-        (h_starting_state.0 ^ v[0] ^ v[8]).to_le_bytes(),
-        (h_starting_state.1 ^ v[1] ^ v[9]).to_le_bytes(),
-        (h_starting_state.2 ^ v[2] ^ v[10]).to_le_bytes(),
-        (h_starting_state.3 ^ v[3] ^ v[11]).to_le_bytes(),
-        (h_starting_state.4 ^ v[4] ^ v[12]).to_le_bytes(),
-        (h_starting_state.5 ^ v[5] ^ v[13]).to_le_bytes(),
-        (h_starting_state.6 ^ v[6] ^ v[14]).to_le_bytes(),
-        (h_starting_state.7 ^ v[7] ^ v[15]).to_le_bytes(),
+        (h_starting_state[0] ^ v[0] ^ v[8]).to_le_bytes(),
+        (h_starting_state[1] ^ v[1] ^ v[9]).to_le_bytes(),
+        (h_starting_state[2] ^ v[2] ^ v[10]).to_le_bytes(),
+        (h_starting_state[3] ^ v[3] ^ v[11]).to_le_bytes(),
+        (h_starting_state[4] ^ v[4] ^ v[12]).to_le_bytes(),
+        (h_starting_state[5] ^ v[5] ^ v[13]).to_le_bytes(),
+        (h_starting_state[6] ^ v[6] ^ v[14]).to_le_bytes(),
+        (h_starting_state[7] ^ v[7] ^ v[15]).to_le_bytes(),
     ];
 
     let mut result = [0u8; 64];
@@ -361,18 +361,9 @@ mod tests {
 
             let result_bytes = blake2b_compress(
                 rounds,
-                (
-                    h_starting_state[0],
-                    h_starting_state[1],
-                    h_starting_state[2],
-                    h_starting_state[3],
-                    h_starting_state[4],
-                    h_starting_state[5],
-                    h_starting_state[6],
-                    h_starting_state[7],
-                ),
+                &h_starting_state,
                 &block,
-                (t_offset_counters[0], t_offset_counters[1]),
+                &t_offset_counters,
                 final_block_flag,
             )
             .to_vec();
@@ -391,18 +382,9 @@ mod tests {
 
             let result_bytes = blake2b_compress(
                 rounds,
-                (
-                    h_starting_state[0],
-                    h_starting_state[1],
-                    h_starting_state[2],
-                    h_starting_state[3],
-                    h_starting_state[4],
-                    h_starting_state[5],
-                    h_starting_state[6],
-                    h_starting_state[7],
-                ),
+                &h_starting_state,
                 &block,
-                (t_offset_counters[0], t_offset_counters[1]),
+                &t_offset_counters,
                 final_block_flag,
             )
             .to_vec();
@@ -428,18 +410,9 @@ mod tests {
 
         let result_bytes = blake2b_compress(
             rounds,
-            (
-                h_starting_state[0],
-                h_starting_state[1],
-                h_starting_state[2],
-                h_starting_state[3],
-                h_starting_state[4],
-                h_starting_state[5],
-                h_starting_state[6],
-                h_starting_state[7],
-            ),
+            &h_starting_state,
             &block,
-            (t_offset_counters[0], t_offset_counters[1]),
+            &t_offset_counters,
             final_block_flag,
         )
         .to_vec();
@@ -463,18 +436,9 @@ mod tests {
         bencher.iter(|| {
             blake2b_compress(
                 rounds,
-                (
-                    h_starting_state[0],
-                    h_starting_state[1],
-                    h_starting_state[2],
-                    h_starting_state[3],
-                    h_starting_state[4],
-                    h_starting_state[5],
-                    h_starting_state[6],
-                    h_starting_state[7],
-                ),
+                &h_starting_state,
                 &block,
-                (t_offset_counters[0], t_offset_counters[1]),
+                &t_offset_counters,
                 final_block_flag,
             )
             .to_vec()
