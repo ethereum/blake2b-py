@@ -118,6 +118,8 @@ macro_rules! G {
         let mut vc = $v[$c];
         let mut vd = $v[$d];
 
+        // RFC 7693 includes the use of mod operators in this section.  We don't need them since
+        // mod is implied by u32 and u64 arithmetic.
         let mut w;
         va = va + vb + $x;
         w = vd ^ va;
