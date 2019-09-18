@@ -4,7 +4,8 @@ use std::convert::TryInto;
 
 use pyo3::prelude::*;
 
-const SIGMA_SCHEDULE: [[usize; 16]; 10] = [
+const SIGMA_SCHEDULE_LEN: usize = 10;
+const SIGMA_SCHEDULE: [[usize; 16]; SIGMA_SCHEDULE_LEN] = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
     [11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4],
@@ -16,7 +17,6 @@ const SIGMA_SCHEDULE: [[usize; 16]; 10] = [
     [6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5],
     [10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0],
 ];
-const SIGMA_SCHEDULE_LEN: usize = 10;
 
 const WORDBITS: u8 = 64;
 const MASKBITS: u64 = u64::max_value();
