@@ -78,8 +78,9 @@ macro_rules! G {
         let mut vc = $v[$c];
         let mut vd = $v[$d];
 
+        let mut w;
         va = va + vb + $x;
-        let mut w = vd ^ va;
+        w = vd ^ va;
         vd = (w >> ROT1) ^ (w << (WB_ROT1));
         vc = vc + vd;
         w = vb ^ vc;
