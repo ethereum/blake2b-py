@@ -462,14 +462,13 @@ mod tests {
         assert_eq!(hex::encode(result_bytes), *expected);
     }
 
-    #[bench]
-    fn bench_blake2b_compress_2_000_000(b: &mut Bencher) {
-        let input_bytes = hex::decode("001e848048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
+    fn blake2b_compress_benchmark(rounds: usize, bencher: &mut Bencher) {
+        let input_bytes = hex::decode("0000000048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
 
         let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
-        let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) = blake2_params;
+        let (_, h_starting_state, block, t_offset_counters, final_block_flag) = blake2_params;
 
-        b.iter(|| {
+        bencher.iter(|| {
             blake2b_compress(
                 rounds,
                 (
@@ -491,30 +490,17 @@ mod tests {
     }
 
     #[bench]
-    fn bench_blake2b_compress_8_000_000(b: &mut Bencher) {
-        let input_bytes = hex::decode("007a120048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
+    fn bench_blake2b_compress_100_000(bencher: &mut Bencher) {
+        blake2b_compress_benchmark(100_000, bencher);
+    }
 
-        let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
-        let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) = blake2_params;
+    #[bench]
+    fn bench_blake2b_compress_2_000_000(bencher: &mut Bencher) {
+        blake2b_compress_benchmark(2_000_000, bencher);
+    }
 
-        b.iter(|| {
-            blake2b_compress(
-                rounds,
-                (
-                    h_starting_state[0],
-                    h_starting_state[1],
-                    h_starting_state[2],
-                    h_starting_state[3],
-                    h_starting_state[4],
-                    h_starting_state[5],
-                    h_starting_state[6],
-                    h_starting_state[7],
-                ),
-                &block,
-                (t_offset_counters[0], t_offset_counters[1]),
-                final_block_flag,
-            )
-            .to_vec()
-        });
+    #[bench]
+    fn bench_blake2b_compress_8_000_000(bencher: &mut Bencher) {
+        blake2b_compress_benchmark(8_000_000, bencher);
     }
 }
