@@ -354,7 +354,7 @@ mod tests {
                 blake2_params;
 
             let rust_result_bytes = blake2b_compress(
-                rounds as usize,
+                rounds,
                 (
                     h_starting_state[0],
                     h_starting_state[1],
