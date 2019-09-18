@@ -112,19 +112,19 @@ fn rotate_bits(x: u64, n: usize) -> u64 {
     (x >> n) ^ (x << (WORDBITS - n))
 }
 
-macro_rules! G {
-    ($v:ident, $a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $y:expr) => {{
-        // RFC 7693 includes the use of mod operators in this section.  We don't need them since
-        // mod is implied by u32 and u64 arithmetic.
-        $v[$a] = $v[$a] + $v[$b] + $x;
-        $v[$d] = rotate_bits($v[$d] ^ $v[$a], ROT1);
-        $v[$c] = $v[$c] + $v[$d];
-        $v[$b] = rotate_bits($v[$b] ^ $v[$c], ROT2);
-        $v[$a] = $v[$a] + $v[$b] + $y;
-        $v[$d] = rotate_bits($v[$d] ^ $v[$a], ROT3);
-        $v[$c] = $v[$c] + $v[$d];
-        $v[$b] = rotate_bits($v[$b] ^ $v[$c], ROT4);
-    }};
+#[allow(non_snake_case)]
+#[inline]
+fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) {
+    // RFC 7693 includes the use of mod operators in this section.  We don't need them since
+    // mod is implied by u32 and u64 arithmetic.
+    v[a] = v[a] + v[b] + x;
+    v[d] = rotate_bits(v[d] ^ v[a], ROT1);
+    v[c] = v[c] + v[d];
+    v[b] = rotate_bits(v[b] ^ v[c], ROT2);
+    v[a] = v[a] + v[b] + y;
+    v[d] = rotate_bits(v[d] ^ v[a], ROT3);
+    v[c] = v[c] + v[d];
+    v[b] = rotate_bits(v[b] ^ v[c], ROT4);
 }
 
 pub fn blake2b_compress(
@@ -162,15 +162,15 @@ pub fn blake2b_compress(
     for r in 0..num_rounds {
         let s = &SIGMA_SCHEDULE[r % SIGMA_SCHEDULE_LEN];
 
-        G!(v, 0, 4, 8, 12, m[s[0]], m[s[1]]);
-        G!(v, 1, 5, 9, 13, m[s[2]], m[s[3]]);
-        G!(v, 2, 6, 10, 14, m[s[4]], m[s[5]]);
-        G!(v, 3, 7, 11, 15, m[s[6]], m[s[7]]);
+        G(&mut v, 0, 4, 8, 12, m[s[0]], m[s[1]]);
+        G(&mut v, 1, 5, 9, 13, m[s[2]], m[s[3]]);
+        G(&mut v, 2, 6, 10, 14, m[s[4]], m[s[5]]);
+        G(&mut v, 3, 7, 11, 15, m[s[6]], m[s[7]]);
 
-        G!(v, 0, 5, 10, 15, m[s[8]], m[s[9]]);
-        G!(v, 1, 6, 11, 12, m[s[10]], m[s[11]]);
-        G!(v, 2, 7, 8, 13, m[s[12]], m[s[13]]);
-        G!(v, 3, 4, 9, 14, m[s[14]], m[s[15]]);
+        G(&mut v, 0, 5, 10, 15, m[s[8]], m[s[9]]);
+        G(&mut v, 1, 6, 11, 12, m[s[10]], m[s[11]]);
+        G(&mut v, 2, 7, 8, 13, m[s[12]], m[s[13]]);
+        G(&mut v, 3, 4, 9, 14, m[s[14]], m[s[15]]);
     }
 
     let result_message_word_bytes = [
