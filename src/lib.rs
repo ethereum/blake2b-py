@@ -309,6 +309,7 @@ mod tests {
     ];
 
     #[test]
+    #[ignore]
     fn test_py_blake2b_compress_success() {
         let gil = Python::acquire_gil();
         let py = gil.python();
