@@ -155,6 +155,7 @@ pub fn blake2b_compress(
         (h_starting_state.6 ^ v[6] ^ v[14]).to_le_bytes(),
         (h_starting_state.7 ^ v[7] ^ v[15]).to_le_bytes(),
     ];
+
     let mut result = [0u8; 64];
     for (i, word_bytes) in result_message_word_bytes.into_iter().enumerate() {
         for (j, x) in word_bytes.into_iter().enumerate() {
