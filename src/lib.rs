@@ -73,16 +73,16 @@ macro_rules! G {
 
         va = va + vb + $x;
         let mut w = vd ^ va;
-        vd = (w >> ROT1) | (w << (WB_ROT1));
+        vd = (w >> ROT1) ^ (w << (WB_ROT1));
         vc = vc + vd;
         w = vb ^ vc;
-        vb = (w >> ROT2) | (w << (WB_ROT2));
+        vb = (w >> ROT2) ^ (w << (WB_ROT2));
         va = va + vb + $y;
         w = vd ^ va;
-        vd = (w >> ROT3) | (w << (WB_ROT3));
+        vd = (w >> ROT3) ^ (w << (WB_ROT3));
         vc = vc + vd;
         w = vb ^ vc;
-        vb = (w >> ROT4) | (w << (WB_ROT4));
+        vb = (w >> ROT4) ^ (w << (WB_ROT4));
 
         $v[$a] = va;
         $v[$b] = vb;
