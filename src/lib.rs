@@ -177,7 +177,43 @@ mod tests {
 
     type TFCompressArgs = (usize, Vec<u64>, Vec<u8>, Vec<u64>, bool);
 
-    pub struct PyBlake2<'a> {
+    #[inline]
+    fn u32_from_be(input: &[u8]) -> u32 {
+        u32::from_be_bytes(input.try_into().unwrap())
+    }
+
+    #[inline]
+    fn u64_from_le(input: &[u8]) -> u64 {
+        u64::from_le_bytes(input.try_into().unwrap())
+    }
+
+    fn extract_blake2b_parameters(input: &[u8]) -> Result<TFCompressArgs, String> {
+        if input.len() != 213 {
+            Err(format!(
+                "input length for Blake2 F precompile should be exactly 213 bytes, got: {}",
+                input.len()
+            ))
+        } else {
+            Ok((
+                u32_from_be(&input[..4]) as usize,
+                vec![
+                    u64_from_le(&input[4..12]),
+                    u64_from_le(&input[12..20]),
+                    u64_from_le(&input[20..28]),
+                    u64_from_le(&input[28..36]),
+                    u64_from_le(&input[36..44]),
+                    u64_from_le(&input[44..52]),
+                    u64_from_le(&input[52..60]),
+                    u64_from_le(&input[60..68]),
+                ],
+                input[68..196].to_vec(),
+                vec![u64_from_le(&input[196..204]), u64_from_le(&input[204..212])],
+                input[212] > 0,
+            ))
+        }
+    }
+
+    struct PyBlake2<'a> {
         py: Python<'a>,
         module: &'a PyModule,
     }
@@ -317,6 +353,37 @@ mod tests {
             let err = blake2.extract_blake2b_parameters(&input_bytes).unwrap_err();
 
             assert!(err.is_instance::<ValueError>(py));
+        }
+    }
+
+    #[test]
+    fn test_rust_blake2b_compress_success() {
+        for (inp, expected) in FAST_EXAMPLES {
+            let input_bytes = hex::decode(inp).unwrap();
+
+            let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+            let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
+                blake2_params;
+
+            let rust_result_bytes = blake2b_compress(
+                rounds as usize,
+                (
+                    h_starting_state[0],
+                    h_starting_state[1],
+                    h_starting_state[2],
+                    h_starting_state[3],
+                    h_starting_state[4],
+                    h_starting_state[5],
+                    h_starting_state[6],
+                    h_starting_state[7],
+                ),
+                &block,
+                (t_offset_counters[0], t_offset_counters[1]),
+                final_block_flag,
+            )
+            .to_vec();
+
+            assert_eq!(hex::encode(rust_result_bytes), *expected);
         }
     }
 }
