@@ -64,6 +64,33 @@ fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
     ]
 }
 
+macro_rules! G {
+    ($v:ident, $a:expr, $b:expr, $c:expr, $d:expr, $x:expr, $y:expr) => {{
+        let mut va = $v[$a];
+        let mut vb = $v[$b];
+        let mut vc = $v[$c];
+        let mut vd = $v[$d];
+
+        va = va + vb + $x;
+        let mut w = vd ^ va;
+        vd = (w >> ROT1) | (w << (WB_ROT1));
+        vc = vc + vd;
+        w = vb ^ vc;
+        vb = (w >> ROT2) | (w << (WB_ROT2));
+        va = va + vb + $y;
+        w = vd ^ va;
+        vd = (w >> ROT3) | (w << (WB_ROT3));
+        vc = vc + vd;
+        w = vb ^ vc;
+        vb = (w >> ROT4) | (w << (WB_ROT4));
+
+        $v[$a] = va;
+        $v[$b] = vb;
+        $v[$c] = vc;
+        $v[$d] = vd;
+    }};
+}
+
 pub fn blake2b_compress(
     num_rounds: usize,
     h_starting_state: (u64, u64, u64, u64, u64, u64, u64, u64),
@@ -96,57 +123,18 @@ pub fn blake2b_compress(
         IV[7],                       // 15
     ];
 
-    macro_rules! blake2b_G {
-        ($v:ident, $a:expr, $b:expr, $c:expr, $d:expr, $msri2:ident, $msri21:ident) => {{
-            let mut va = $v[$a];
-            let mut vb = $v[$b];
-            let mut vc = $v[$c];
-            let mut vd = $v[$d];
-            va = (va + vb + $msri2) & MASKBITS;
-            let mut w = vd ^ va;
-            vd = (w >> ROT1) | (w << (WB_ROT1)) & MASKBITS;
-            vc = (vc + vd) & MASKBITS;
-            w = vb ^ vc;
-            vb = (w >> ROT2) | (w << (WB_ROT2)) & MASKBITS;
-            va = (va + vb + $msri21) & MASKBITS;
-            w = vd ^ va;
-            vd = (w >> ROT3) | (w << (WB_ROT3)) & MASKBITS;
-            vc = (vc + vd) & MASKBITS;
-            w = vb ^ vc;
-            vb = (w >> ROT4) | (w << (WB_ROT4)) & MASKBITS;
-            $v[$a] = va;
-            $v[$b] = vb;
-            $v[$c] = vc;
-            $v[$d] = vd;
-        }};
-    }
-
     for r in 0..num_rounds {
-        let sr = &SIGMA_SCHEDULE[r % SIGMA_SCHEDULE_LEN];
-        let msri2 = m[sr[0]];
-        let msri21 = m[sr[1]];
-        blake2b_G!(v, 0, 4, 8, 12, msri2, msri21);
-        let msri2 = m[sr[2]];
-        let msri21 = m[sr[3]];
-        blake2b_G!(v, 1, 5, 9, 13, msri2, msri21);
-        let msri2 = m[sr[4]];
-        let msri21 = m[sr[5]];
-        blake2b_G!(v, 2, 6, 10, 14, msri2, msri21);
-        let msri2 = m[sr[6]];
-        let msri21 = m[sr[7]];
-        blake2b_G!(v, 3, 7, 11, 15, msri2, msri21);
-        let msri2 = m[sr[8]];
-        let msri21 = m[sr[9]];
-        blake2b_G!(v, 0, 5, 10, 15, msri2, msri21);
-        let msri2 = m[sr[10]];
-        let msri21 = m[sr[11]];
-        blake2b_G!(v, 1, 6, 11, 12, msri2, msri21);
-        let msri2 = m[sr[12]];
-        let msri21 = m[sr[13]];
-        blake2b_G!(v, 2, 7, 8, 13, msri2, msri21);
-        let msri2 = m[sr[14]];
-        let msri21 = m[sr[15]];
-        blake2b_G!(v, 3, 4, 9, 14, msri2, msri21);
+        let s = &SIGMA_SCHEDULE[r % SIGMA_SCHEDULE_LEN];
+
+        G!(v, 0, 4, 8, 12, m[s[0]], m[s[1]]);
+        G!(v, 1, 5, 9, 13, m[s[2]], m[s[3]]);
+        G!(v, 2, 6, 10, 14, m[s[4]], m[s[5]]);
+        G!(v, 3, 7, 11, 15, m[s[6]], m[s[7]]);
+
+        G!(v, 0, 5, 10, 15, m[s[8]], m[s[9]]);
+        G!(v, 1, 6, 11, 12, m[s[10]], m[s[11]]);
+        G!(v, 2, 7, 8, 13, m[s[12]], m[s[13]]);
+        G!(v, 3, 4, 9, 14, m[s[14]], m[s[15]]);
     }
 
     let result_message_word_bytes = [
