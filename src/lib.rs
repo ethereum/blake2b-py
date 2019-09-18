@@ -1,5 +1,7 @@
 extern crate pyo3;
 
+use std::convert::TryInto;
+
 use pyo3::prelude::*;
 
 const SIGMA_SCHEDULE: [[usize; 16]; 10] = [
@@ -42,8 +44,6 @@ const WB_ROT4: u8 = WORDBITS - ROT4;
 
 #[inline]
 fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
-    use std::convert::TryInto;
-
     [
         u64::from_le_bytes((&input[..8]).try_into().unwrap()),
         u64::from_le_bytes((&input[8..16]).try_into().unwrap()),
