@@ -175,7 +175,7 @@ mod tests {
 
     use super::*;
 
-    type TFCompressArgs = (u64, Vec<u64>, Vec<u8>, Vec<u64>, bool);
+    type TFCompressArgs = (usize, Vec<u64>, Vec<u8>, Vec<u64>, bool);
 
     pub struct PyBlake2<'a> {
         py: Python<'a>,
@@ -209,7 +209,7 @@ mod tests {
 
         fn blake2b_compress(
             &self,
-            rounds: u64,
+            rounds: usize,
             h_starting_state: &[u64],
             block: &[u8],
             t_offset_counters: &[u64],
