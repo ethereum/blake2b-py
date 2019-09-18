@@ -23,8 +23,8 @@ cargo bench
 
 The test covering test vector 8 from EIP 152
 (https://eips.ethereum.org/EIPS/eip-152#test-vector-8) takes a little while to
-run.  Because of this, it's not included in the normal test suite.  To run the
-test and see a message describing how long it took, run this command:
+run.  Because of this, it's ignored in the normal test suite.  To run the test
+and see a message describing how long it took, run this command:
 ```bash
 cargo test --release -- --ignored --nocapture
 ```
