@@ -45,24 +45,29 @@ const WB_ROT3: u8 = WORDBITS - ROT3;
 const WB_ROT4: u8 = WORDBITS - ROT4;
 
 #[inline]
+fn u64_from_le(input: &[u8]) -> u64 {
+    u64::from_le_bytes(input.try_into().unwrap())
+}
+
+#[inline]
 fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
     [
-        u64::from_le_bytes((&input[..8]).try_into().unwrap()),
-        u64::from_le_bytes((&input[8..16]).try_into().unwrap()),
-        u64::from_le_bytes((&input[16..24]).try_into().unwrap()),
-        u64::from_le_bytes((&input[24..32]).try_into().unwrap()),
-        u64::from_le_bytes((&input[32..40]).try_into().unwrap()),
-        u64::from_le_bytes((&input[40..48]).try_into().unwrap()),
-        u64::from_le_bytes((&input[48..56]).try_into().unwrap()),
-        u64::from_le_bytes((&input[56..64]).try_into().unwrap()),
-        u64::from_le_bytes((&input[64..72]).try_into().unwrap()),
-        u64::from_le_bytes((&input[72..80]).try_into().unwrap()),
-        u64::from_le_bytes((&input[80..88]).try_into().unwrap()),
-        u64::from_le_bytes((&input[88..96]).try_into().unwrap()),
-        u64::from_le_bytes((&input[96..104]).try_into().unwrap()),
-        u64::from_le_bytes((&input[104..112]).try_into().unwrap()),
-        u64::from_le_bytes((&input[112..120]).try_into().unwrap()),
-        u64::from_le_bytes((&input[120..128]).try_into().unwrap()),
+        u64_from_le(&input[..8]),
+        u64_from_le(&input[8..16]),
+        u64_from_le(&input[16..24]),
+        u64_from_le(&input[24..32]),
+        u64_from_le(&input[32..40]),
+        u64_from_le(&input[40..48]),
+        u64_from_le(&input[48..56]),
+        u64_from_le(&input[56..64]),
+        u64_from_le(&input[64..72]),
+        u64_from_le(&input[72..80]),
+        u64_from_le(&input[80..88]),
+        u64_from_le(&input[88..96]),
+        u64_from_le(&input[96..104]),
+        u64_from_le(&input[104..112]),
+        u64_from_le(&input[112..120]),
+        u64_from_le(&input[120..128]),
     ]
 }
 
@@ -162,20 +167,13 @@ pub fn blake2b_compress(
 #[cfg(test)]
 mod tests {
     extern crate hex;
+    extern crate test;
 
     use super::*;
 
+    use test::Bencher;
+
     type TFCompressArgs = (usize, Vec<u64>, Vec<u8>, Vec<u64>, bool);
-
-    #[inline]
-    fn u32_from_be(input: &[u8]) -> u32 {
-        u32::from_be_bytes(input.try_into().unwrap())
-    }
-
-    #[inline]
-    fn u64_from_le(input: &[u8]) -> u64 {
-        u64::from_le_bytes(input.try_into().unwrap())
-    }
 
     fn extract_blake2b_parameters(input: &[u8]) -> Result<TFCompressArgs, String> {
         if input.len() != 213 {
@@ -185,7 +183,7 @@ mod tests {
             ))
         } else {
             Ok((
-                u32_from_be(&input[..4]) as usize,
+                u32::from_be_bytes((&input[..4]).try_into().unwrap()) as usize,
                 vec![
                     u64_from_le(&input[4..12]),
                     u64_from_le(&input[12..20]),
@@ -446,9 +444,6 @@ mod tests {
 
         assert_eq!(hex::encode(result_bytes), *expected);
     }
-
-    extern crate test;
-    use test::Bencher;
 
     #[bench]
     fn bench_blake2b_compress_2_000_000(b: &mut Bencher) {
