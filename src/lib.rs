@@ -106,17 +106,23 @@ fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
     ]
 }
 
-/// Rotate the bits in the unsigned 64-bit int `x` right `n` bits.
+/// Rotate bits in the unsigned 64-bit integer `x` right `n` bits.
+///
+/// See here: https://tools.ietf.org/html/rfc7693#section-2.3
 #[inline]
 fn rotate_bits(x: u64, n: usize) -> u64 {
     (x >> n) ^ (x << (WORDBITS - n))
 }
 
+/// Mix two input words, "x" and "y", into four words indexed by "a", "b", "c", and "d" in the
+/// working vector "v".
+///
+/// See here: https://tools.ietf.org/html/rfc7693#section-3.1
 #[allow(non_snake_case)]
 #[inline]
 fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) {
-    // RFC 7693 includes the use of mod operators in this section.  We don't need them since
-    // mod is implied by u32 and u64 arithmetic.
+    // RFC 7693 includes the use of mod operators in this section.  We don't need them since mod is
+    // implied by u64 arithmetic.
     v[a] = v[a] + v[b] + x;
     v[d] = rotate_bits(v[d] ^ v[a], ROT1);
     v[c] = v[c] + v[d];
