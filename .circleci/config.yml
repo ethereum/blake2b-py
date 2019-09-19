@@ -17,7 +17,7 @@ common: &common
         when: on_fail
     - restore_cache:
         keys:
-          - v4-cache-{{ checksum "Cargo.toml" }}
+          - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
     - run:
         name: setup nightly toolchain
         command: rustup install nightly && rustup default nightly
@@ -27,7 +27,7 @@ common: &common
     - save_cache:
         paths:
           - target
-        key: v4-cache-{{ checksum "Cargo.toml" }}
+        key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
 
 jobs:
   core:
