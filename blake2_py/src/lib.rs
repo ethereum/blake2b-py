@@ -103,7 +103,7 @@ fn blake2b_compress(
 
 /// Functions for calculating blake2b hashes.
 #[pymodule]
-fn blake2_py(_py: Python, m: &PyModule) -> PyResult<()> {
+fn blake2(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(extract_blake2b_parameters))?;
     m.add_wrapped(wrap_pyfunction!(blake2b_compress))?;
 

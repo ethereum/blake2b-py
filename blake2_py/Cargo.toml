@@ -8,7 +8,7 @@ repository = "https://github.com/davesque/blake2"
 description = "Python bindings for blake2 compression in Rust."
 
 [lib]
-name = "blake2_py"
+name = "blake2"
 crate-type = ["cdylib"]
 
 [dependencies]
