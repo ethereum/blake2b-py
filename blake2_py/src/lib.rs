@@ -5,12 +5,12 @@ use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
-use blake2::TFCompressArgs;
-
 /// Convenience function for building python value errors.
 fn value_error<V>(msg: String) -> PyResult<V> {
     Err(ValueError::py_err(msg))
 }
+
+pub type CompressArgs = (usize, Vec<u64>, PyObject, Vec<u64>, bool);
 
 /// extract_blake2b_parameters(input)
 /// --
@@ -28,12 +28,21 @@ fn value_error<V>(msg: String) -> PyResult<V> {
 /// out : (int, List[int], bytes, List[int], bool)
 ///     A tuple of parameters to pass to the ``blake2b_compress`` function.
 #[pyfunction]
-fn extract_blake2b_parameters(input: Vec<u8>) -> PyResult<TFCompressArgs> {
+fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressArgs> {
     let result = blake2::extract_blake2b_parameters(&input);
 
     match result {
         Err(msg) => Err(PyErr::new::<ValueError, _>(msg)),
-        Ok(args) => Ok(args),
+        Ok(args) => {
+            let (rounds, state, block, offsets, flag) = args;
+            Ok((
+                rounds,
+                state,
+                PyBytes::new(py, &block).into(),
+                offsets,
+                flag,
+            ))
+        }
     }
 }
 
