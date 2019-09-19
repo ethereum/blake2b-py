@@ -1,5 +1,11 @@
 #![feature(test)]
 
+#[cfg(test)]
+extern crate quickcheck;
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
+
 extern crate pyo3;
 
 use std::convert::TryInto;
@@ -207,69 +213,8 @@ mod tests {
 
     use super::*;
 
+    use quickcheck::TestResult;
     use test::Bencher;
-
-    struct PyBlake2<'a> {
-        py: Python<'a>,
-        module: &'a PyModule,
-    }
-
-    impl<'a> PyBlake2<'a> {
-        fn new(py: Python<'a>) -> Self {
-            let result = PyModule::from_code(py, include_str!("blake2.py"), "blake2.py", "blake2");
-
-            match result {
-                Err(e) => {
-                    e.print(py);
-                    panic!("Python exception when loading blake2.py");
-                }
-                Ok(module) => Self { py, module },
-            }
-        }
-
-        fn extract_blake2b_parameters(&self, input_bytes: &[u8]) -> PyResult<TFCompressArgs> {
-            use pyo3::types::PyBytes;
-
-            let input_bytes = PyBytes::new(self.py, input_bytes);
-
-            let py_val = self
-                .module
-                .call("extract_blake2b_parameters", (input_bytes,), None)?;
-
-            py_val.extract()
-        }
-
-        fn blake2b_compress(
-            &self,
-            rounds: usize,
-            h_starting_state: &[u64],
-            block: &[u8],
-            t_offset_counters: &[u64],
-            final_block_flag: bool,
-        ) -> PyResult<Vec<u8>> {
-            use pyo3::types::PyTuple;
-
-            let rounds = rounds.to_object(self.py);
-            let h_starting_state = PyTuple::new(self.py, h_starting_state);
-            let block = block.to_object(self.py);
-            let t_offset_counters = PyTuple::new(self.py, t_offset_counters);
-            let final_block_flag = final_block_flag.to_object(self.py);
-
-            let py_val = self.module.call(
-                "blake2b_compress",
-                (
-                    rounds,
-                    h_starting_state,
-                    block,
-                    t_offset_counters,
-                    final_block_flag,
-                ),
-                None,
-            )?;
-
-            py_val.extract()
-        }
-    }
 
     const FAST_EXAMPLES: &[(&str, &str)] = &[
         (
@@ -307,50 +252,6 @@ mod tests {
             "6d2ce9e534d50e18ff866ae92d70cceba79bbcd14c63819fe48752c8aca87a4bb7dcc230d22a4047f0486cfcfb50a17b24b2899eb8fca370f22240adb5170189",
         ),
     ];
-
-    #[test]
-    #[ignore]
-    fn test_py_blake2b_compress_success() {
-        let gil = Python::acquire_gil();
-        let py = gil.python();
-        let blake2 = PyBlake2::new(py);
-
-        for (inp, expected) in FAST_EXAMPLES {
-            let input_bytes = hex::decode(inp).unwrap();
-            let blake2_params = blake2.extract_blake2b_parameters(&input_bytes).unwrap();
-            let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
-                blake2_params;
-
-            let result_bytes = blake2
-                .blake2b_compress(
-                    rounds,
-                    &h_starting_state,
-                    &block,
-                    &t_offset_counters,
-                    final_block_flag,
-                )
-                .unwrap();
-
-            assert_eq!(hex::encode(result_bytes), *expected);
-        }
-    }
-
-    #[test]
-    fn test_py_extract_blake2b_parameters_error() {
-        use pyo3::exceptions::ValueError;
-
-        let gil = Python::acquire_gil();
-        let py = gil.python();
-        let blake2 = PyBlake2::new(py);
-
-        for inp in ERROR_EXAMPLES {
-            let input_bytes = hex::decode(inp).unwrap();
-
-            let err = blake2.extract_blake2b_parameters(&input_bytes).unwrap_err();
-
-            assert!(err.is_instance::<ValueError>(py));
-        }
-    }
 
     #[test]
     fn test_blake2b_compress_success() {
@@ -394,7 +295,8 @@ mod tests {
         }
     }
 
-    /// Check test vector 8 from EIP 152 (https://eips.ethereum.org/EIPS/eip-152#test-vector-8)
+    /// Check slow running test vector 8 from EIP 152
+    /// (https://eips.ethereum.org/EIPS/eip-152#test-vector-8)
     #[test]
     #[ignore]
     fn test_blake2b_compress_eip_152_vec_8() {
@@ -459,5 +361,191 @@ mod tests {
     #[bench]
     fn bench_blake2b_compress_8_000_000(bencher: &mut Bencher) {
         blake2b_compress_benchmark(8_000_000, bencher);
+    }
+
+    struct PyBlake2<'a> {
+        py: Python<'a>,
+        module: &'a PyModule,
+    }
+
+    impl<'a> PyBlake2<'a> {
+        fn new(py: Python<'a>) -> Self {
+            let result = PyModule::from_code(py, include_str!("blake2.py"), "blake2.py", "blake2");
+
+            match result {
+                Err(e) => {
+                    e.print(py);
+                    panic!("Python exception when loading blake2.py");
+                }
+                Ok(module) => Self { py, module },
+            }
+        }
+
+        fn extract_blake2b_parameters(&self, input_bytes: &[u8]) -> PyResult<TFCompressArgs> {
+            use pyo3::types::PyBytes;
+
+            let input_bytes = PyBytes::new(self.py, input_bytes);
+
+            let py_val = self
+                .module
+                .call("extract_blake2b_parameters", (input_bytes,), None)?;
+
+            py_val.extract()
+        }
+
+        fn blake2b_compress(
+            &self,
+            rounds: usize,
+            h_starting_state: &[u64],
+            block: &[u8],
+            t_offset_counters: &[u64],
+            final_block_flag: bool,
+        ) -> PyResult<Vec<u8>> {
+            use pyo3::types::PyTuple;
+
+            let rounds = rounds.to_object(self.py);
+            let h_starting_state = PyTuple::new(self.py, h_starting_state);
+            let block = block.to_object(self.py);
+            let t_offset_counters = PyTuple::new(self.py, t_offset_counters);
+            let final_block_flag = final_block_flag.to_object(self.py);
+
+            let py_val = self.module.call(
+                "blake2b_compress",
+                (
+                    rounds,
+                    h_starting_state,
+                    block,
+                    t_offset_counters,
+                    final_block_flag,
+                ),
+                None,
+            )?;
+
+            py_val.extract()
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_py_blake2b_compress_success() {
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let blake2 = PyBlake2::new(py);
+
+        for (inp, expected) in FAST_EXAMPLES {
+            let input_bytes = hex::decode(inp).unwrap();
+            let blake2_params = blake2.extract_blake2b_parameters(&input_bytes).unwrap();
+            let (rounds, h_starting_state, block, t_offset_counters, final_block_flag) =
+                blake2_params;
+
+            let result_bytes = blake2
+                .blake2b_compress(
+                    rounds,
+                    &h_starting_state,
+                    &block,
+                    &t_offset_counters,
+                    final_block_flag,
+                )
+                .unwrap();
+
+            assert_eq!(hex::encode(result_bytes), *expected);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_py_extract_blake2b_parameters_error() {
+        use pyo3::exceptions::ValueError;
+
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let blake2 = PyBlake2::new(py);
+
+        for inp in ERROR_EXAMPLES {
+            let input_bytes = hex::decode(inp).unwrap();
+
+            let err = blake2.extract_blake2b_parameters(&input_bytes).unwrap_err();
+
+            assert!(err.is_instance::<ValueError>(py));
+        }
+    }
+
+    #[quickcheck]
+    fn qc_same_result_as_python(
+        rounds: u8,
+        h_starting_state: (u64, u64, u64, u64, u64, u64, u64, u64),
+        block_chunk_1: (u64, u64, u64, u64, u64, u64, u64, u64),
+        block_chunk_2: (u64, u64, u64, u64, u64, u64, u64, u64),
+        t_offset_counters: (u64, u64),
+        final_block_flag: bool,
+    ) -> TestResult {
+        // We have to a bit of wacky value building here because quickcheck only supports
+        // generation of certain value types
+        let h_starting_state = [
+            h_starting_state.0,
+            h_starting_state.1,
+            h_starting_state.2,
+            h_starting_state.3,
+            h_starting_state.4,
+            h_starting_state.5,
+            h_starting_state.6,
+            h_starting_state.7,
+        ];
+
+        let block: Vec<u8> = [
+            block_chunk_1.0.to_be_bytes(),
+            block_chunk_1.1.to_be_bytes(),
+            block_chunk_1.2.to_be_bytes(),
+            block_chunk_1.3.to_be_bytes(),
+            block_chunk_1.4.to_be_bytes(),
+            block_chunk_1.5.to_be_bytes(),
+            block_chunk_1.6.to_be_bytes(),
+            block_chunk_1.7.to_be_bytes(),
+            block_chunk_2.0.to_be_bytes(),
+            block_chunk_2.1.to_be_bytes(),
+            block_chunk_2.2.to_be_bytes(),
+            block_chunk_2.3.to_be_bytes(),
+            block_chunk_2.4.to_be_bytes(),
+            block_chunk_2.5.to_be_bytes(),
+            block_chunk_2.6.to_be_bytes(),
+            block_chunk_2.7.to_be_bytes(),
+        ]
+        .iter()
+        .flatten()
+        .copied()
+        .collect();
+
+        let t_offset_counters = [t_offset_counters.0, t_offset_counters.1];
+
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        let blake2 = PyBlake2::new(py);
+
+        let python_result = blake2.blake2b_compress(
+            rounds as usize,
+            &h_starting_state,
+            &block,
+            &t_offset_counters,
+            final_block_flag,
+        );
+
+        match python_result {
+            Ok(python_result_bytes) => {
+                let rust_result_bytes = blake2b_compress(
+                    rounds as usize,
+                    &h_starting_state,
+                    &block,
+                    &t_offset_counters,
+                    final_block_flag,
+                )
+                .to_vec();
+
+                TestResult::from_bool(python_result_bytes == rust_result_bytes)
+            }
+            Err(err) => {
+                err.print(py);
+                TestResult::failed()
+            }
+        }
     }
 }

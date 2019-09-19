@@ -11,7 +11,8 @@ test_eip_152_vec_8:
 
 test_against_python:
 	cargo test --release \
-		test_py_blake2b_compress_success \
+		test_py_ \
 		-- --ignored --nocapture
+	cargo test --release qc_
 
 .PHONY: test bench ignored
