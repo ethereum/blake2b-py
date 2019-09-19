@@ -2,6 +2,7 @@ extern crate blake2;
 
 use pyo3::exceptions::ValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
 use blake2::TFCompressArgs;
@@ -25,12 +26,13 @@ fn extract_blake2b_parameters(input: Vec<u8>) -> PyResult<TFCompressArgs> {
 /// Calculate a blake2b hash for the given message block.
 #[pyfunction]
 fn blake2b_compress(
+    py: Python,
     num_rounds: usize,
     h_starting_state: Vec<u64>,
     block: Vec<u8>,
     t_offset_counters: Vec<u64>,
     final_block_flag: bool,
-) -> PyResult<Vec<u8>> {
+) -> PyResult<PyObject> {
     if h_starting_state.len() != 8 {
         return value_error(format!(
             "starting state vector must have length 8, got: {}",
@@ -58,7 +60,7 @@ fn blake2b_compress(
         final_block_flag,
     );
 
-    Ok(result.to_vec())
+    Ok(PyBytes::new(py, &result).into())
 }
 
 #[pymodule]
