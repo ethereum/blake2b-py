@@ -6,11 +6,7 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
-extern crate pyo3;
-
 use std::convert::TryInto;
-
-use pyo3::prelude::*;
 
 const SIGMA_SCHEDULE_LEN: usize = 10;
 const SIGMA_SCHEDULE: [[usize; 16]; SIGMA_SCHEDULE_LEN] = [
@@ -209,10 +205,12 @@ pub fn blake2b_compress(
 #[cfg(test)]
 mod tests {
     extern crate hex;
+    extern crate pyo3;
     extern crate test;
 
     use super::*;
 
+    use pyo3::prelude::*;
     use quickcheck::TestResult;
     use test::Bencher;
 
