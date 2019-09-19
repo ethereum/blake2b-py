@@ -470,8 +470,9 @@ mod tests {
         }
     }
 
+    #[ignore]
     #[quickcheck]
-    fn qc_same_result_as_python(
+    fn test_implementations_are_equivalent(
         rounds: u8,
         h_starting_state: (u64, u64, u64, u64, u64, u64, u64, u64),
         block_chunk_1: (u64, u64, u64, u64, u64, u64, u64, u64),
