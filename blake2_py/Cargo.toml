@@ -1,0 +1,16 @@
+[package]
+name = "blake2_py"
+version = "0.1.0"
+authors = ["David Sanders <davesque@gmail.com>"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/davesque/blake2"
+description = "Python bindings for blake2 compression in Rust."
+
+[lib]
+name = "blake2_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.8", features = ["extension-module"] }
+blake2 = { path = "../", version = "0.1.0" }
