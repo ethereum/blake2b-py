@@ -46,7 +46,7 @@ fn u64_from_le(input: &[u8]) -> u64 {
     u64::from_le_bytes(input.try_into().unwrap())
 }
 
-type TFCompressArgs = (usize, Vec<u64>, Vec<u8>, Vec<u64>, bool);
+pub type TFCompressArgs = (usize, Vec<u64>, Vec<u8>, Vec<u64>, bool);
 
 pub fn extract_blake2b_parameters(input: &[u8]) -> Result<TFCompressArgs, String> {
     if input.len() != 213 {
