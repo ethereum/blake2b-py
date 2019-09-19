@@ -10,7 +10,7 @@ fn value_error<V>(msg: String) -> PyResult<V> {
     Err(ValueError::py_err(msg))
 }
 
-pub type CompressArgs = (usize, Vec<u64>, PyObject, Vec<u64>, bool);
+type CompressArgs = (usize, Vec<u64>, PyObject, Vec<u64>, bool);
 
 /// extract_blake2b_parameters(input)
 /// --
