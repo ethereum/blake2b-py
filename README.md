@@ -1,5 +1,7 @@
 # Blake2
 
+[![Build Status](https://circleci.com/gh/davesque/blake2.svg?style=shield)](https://circleci.com/gh/davesque/blake2)
+
 Blake2 compression in Rust with Python bindings.
 
 ## Running the tests
