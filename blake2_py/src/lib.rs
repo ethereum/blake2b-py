@@ -8,7 +8,7 @@ use blake2::TFCompressArgs;
 
 /// Convenience function for building python value errors.
 fn value_error<V>(msg: String) -> PyResult<V> {
-    Err(PyErr::new::<ValueError, _>(msg))
+    Err(ValueError::py_err(msg))
 }
 
 /// Extract `blake2b_compress` parameters from a test vector represented by a byte string.
