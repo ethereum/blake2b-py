@@ -23,7 +23,7 @@ common: &common
         command: rustup install nightly && rustup default nightly
     - run:
         name: run tests
-        command: make test_all
+        command: make test test_against_python
     - save_cache:
         paths:
           - target
