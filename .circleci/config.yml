@@ -19,11 +19,16 @@ common: &common
         keys:
           - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
     - run:
+        name: setup nightly toolchain
+        command: rustup install nightly && rustup default nightly
+    - run:
         name: run tests
         command: make test_all
     - save_cache:
         paths:
           - target
+          - /usr/local/rustup
+          - /usr/local/cargo
         key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
 
 jobs:
