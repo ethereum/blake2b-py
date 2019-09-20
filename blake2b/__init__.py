@@ -1,4 +1,8 @@
 """
 Functions for calculating blake2b hashes.
 """
-from .blake2b import decode_parameters, compress
+from .blake2b import (  # noqa: F401
+    compress,
+    decode_and_compress,
+    decode_parameters,
+)

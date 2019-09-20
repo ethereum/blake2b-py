@@ -18,7 +18,7 @@ type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 /// Parameters
 /// ----------
 /// input : bytes, List[int]
-///     A vector of 213 bytes representing the test vector.
+///     A vector of 213 bytes representing the tightly encoded input.
 ///
 /// Returns
 /// ----------
@@ -45,9 +45,9 @@ fn decode_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
 
 fn checked_compress(
     rounds: usize,
-    starting_state: Vec<u64>,
-    block: Vec<u64>,
-    offset_counters: Vec<u64>,
+    starting_state: &[u64],
+    block: &[u64],
+    offset_counters: &[u64],
     final_block_flag: bool,
 ) -> Result<[u8; 64], String> {
     if starting_state.len() != 8 {
@@ -71,9 +71,9 @@ fn checked_compress(
 
     Ok(blake2b::F(
         rounds,
-        &starting_state,
-        &block,
-        &offset_counters,
+        starting_state,
+        block,
+        offset_counters,
         final_block_flag,
     ))
 }
@@ -113,11 +113,41 @@ fn compress(
 ) -> PyResult<PyObject> {
     let result = checked_compress(
         rounds,
-        starting_state,
-        block,
-        offset_counters,
+        &starting_state,
+        &block,
+        &offset_counters,
         final_block_flag,
     );
+
+    match result {
+        Err(msg) => Err(ValueError::py_err(msg)),
+        Ok(ok) => Ok(PyBytes::new(py, &ok).into()),
+    }
+}
+
+fn _decode_and_compress(input: Vec<u8>) -> Result<[u8; 64], String> {
+    let (r, h, m, t, f) = blake2b::decode_parameters(&input)?;
+    checked_compress(r, &h, &m, &t, f)
+}
+
+/// decode_and_compress(input)
+/// --
+///
+/// Calculates a blake2b hash for the tightly encoded input given in the byte
+/// sequence `input`.
+///
+/// Parameters
+/// ----------
+/// input : bytes, List[int]
+///     A vector of 213 bytes representing the tightly encoded input.
+///
+/// Returns
+/// -------
+/// out : bytes
+///     A vector of 64 bytes representing the blake2b hash of the input data.
+#[pyfunction]
+fn decode_and_compress(py: Python, input: Vec<u8>) -> PyResult<PyObject> {
+    let result = _decode_and_compress(input);
 
     match result {
         Err(msg) => Err(ValueError::py_err(msg)),
@@ -130,6 +160,7 @@ fn compress(
 fn blake2b(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(decode_parameters))?;
     m.add_wrapped(wrap_pyfunction!(compress))?;
+    m.add_wrapped(wrap_pyfunction!(decode_and_compress))?;
 
     Ok(())
 }
