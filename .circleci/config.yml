@@ -31,9 +31,37 @@ jobs:
           paths:
             - target
           key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+  py36-integration:
+    <<: *common
+    docker:
+      - image: davesque/rust-python:nightly-py36
+    steps:
+      - checkout
+      - run:
+          name: merge pull request base
+          command: ./.circleci/merge_pr.sh
+      - run:
+          name: merge pull request base (2nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - run:
+          name: merge pull request base (3nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - restore_cache:
+          keys:
+            - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+      - run:
+          name: run tests
+          command: pip install -r requirements-dev.txt && tox -e py36
+      - save_cache:
+          paths:
+            - target
+          key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
 
 workflows:
   version: 2
   test:
     jobs:
       - core
+      - py36-integration
