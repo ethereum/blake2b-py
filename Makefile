@@ -24,17 +24,14 @@ clean:
 	rm -rf *.egg-info build dist target pip-wheel-metadata
 
 build_docker:
-	docker build \
-		--tag=davesque/rust:nightly .
-	docker build \
+	docker build -f Dockerfile.circleci \
 		--build-arg=PYTHON_VERSION=3.6 \
 		--tag=davesque/rust:nightly-py36 .
-	docker build \
+	docker build -f Dockerfile.circleci \
 		--build-arg=PYTHON_VERSION=3.7 \
 		--tag=davesque/rust:nightly-py37 .
 
 push_docker:
-	docker push davesque/rust:nightly
 	docker push davesque/rust:nightly-py36
 	docker push davesque/rust:nightly-py37
 
