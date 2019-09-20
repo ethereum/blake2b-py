@@ -1,7 +1,5 @@
 from buildpack-deps:xenial
 
-WORKDIR /root
-
 # Rust set up code borrowed from official docker-rust repo:
 # https://github.com/rust-lang/docker-rust/blob/d55d56e152da6cffe980baee408cd18716df4b44/1.37.0/buster/Dockerfile
 ENV RUSTUP_HOME=/usr/local/rustup \
