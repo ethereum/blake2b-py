@@ -5,19 +5,19 @@ test_rust:
 	cargo test --release \
 		test_
 
-test_rust_eip_152_vec_8:
-	@echo ~~~~~~~~~~~~~~~ Running slow EIP 152 test vector 8 ~~~~~~~~~~~~~~~
-	cargo test --release \
-		test_f_compress_eip_152_vec_8 \
-		-- --ignored --nocapture
+test_python:
+	@echo ~~~~~~~~~~~~~~~ Running python binding tests ~~~~~~~~~~~~~~~
+	tox
 
 bench:
 	@echo ~~~~~~~~~~~~~~~ Running rust implementation benchmarks ~~~~~~~~~~~~~~~
 	cargo bench
 
-test_python:
-	@echo ~~~~~~~~~~~~~~~ Running python binding tests ~~~~~~~~~~~~~~~
-	tox
+test_rust_eip_152_vec_8:
+	@echo ~~~~~~~~~~~~~~~ Running slow EIP 152 test vector 8 ~~~~~~~~~~~~~~~
+	cargo test --release \
+		test_f_compress_eip_152_vec_8 \
+		-- --ignored --nocapture
 
 test_all: test_rust test_python bench test_rust_eip_152_vec_8
 
