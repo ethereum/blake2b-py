@@ -7,18 +7,13 @@ use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
-/// Convenience function for building python value errors.
-fn value_error<V>(msg: String) -> PyResult<V> {
-    Err(ValueError::py_err(msg))
-}
-
 type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 
-/// extract_parameters(input)
+/// decode_parameters(input)
 /// --
 ///
-/// Extract parameters for the ``blake2b_compress`` function from a test
-/// vector represented by a byte string.
+/// Decode parameters for the ``compress`` function from the tightly packed
+/// encoding in the byte sequence `input`.
 ///
 /// Parameters
 /// ----------
@@ -28,13 +23,13 @@ type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 /// Returns
 /// ----------
 /// out : (int, List[int], List[int], List[int], bool)
-///     A tuple of parameters to pass to the ``blake2b_compress`` function.
+///     A tuple of parameters to pass to the ``compress`` function.
 #[pyfunction]
-fn extract_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
-    let result = blake2b::extract_parameters(&input);
+fn decode_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
+    let result = blake2b::decode_parameters(&input);
 
     match result {
-        Err(msg) => Err(PyErr::new::<ValueError, _>(msg)),
+        Err(msg) => Err(ValueError::py_err(msg)),
         Ok(args) => {
             let (rounds, state, block, offsets, flag) = args;
             Ok((
@@ -48,8 +43,42 @@ fn extract_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
     }
 }
 
-/// compress(rounds, starting_state, block, offset_counters,
-///     final_block_flag)
+fn checked_compress(
+    rounds: usize,
+    starting_state: Vec<u64>,
+    block: Vec<u64>,
+    offset_counters: Vec<u64>,
+    final_block_flag: bool,
+) -> Result<[u8; 64], String> {
+    if starting_state.len() != 8 {
+        return Err(format!(
+            "starting state vector must have length 8, got: {}",
+            starting_state.len(),
+        ));
+    }
+    if block.len() != 16 {
+        return Err(format!(
+            "block vector must have length 16, got: {}",
+            block.len(),
+        ));
+    }
+    if offset_counters.len() != 2 {
+        return Err(format!(
+            "offset counters vector must have length 2, got: {}",
+            offset_counters.len(),
+        ));
+    }
+
+    Ok(blake2b::F(
+        rounds,
+        &starting_state,
+        &block,
+        &offset_counters,
+        final_block_flag,
+    ))
+}
+
+/// compress(rounds, starting_state, block, offset_counters, final_block_flag)
 /// --
 ///
 /// Calculates a blake2b hash for the given message block.
@@ -82,40 +111,24 @@ fn compress(
     offset_counters: Vec<u64>,
     final_block_flag: bool,
 ) -> PyResult<PyObject> {
-    if starting_state.len() != 8 {
-        return value_error(format!(
-            "starting state vector must have length 8, got: {}",
-            starting_state.len(),
-        ));
-    }
-    if block.len() != 16 {
-        return value_error(format!(
-            "block vector must have length 16, got: {}",
-            block.len(),
-        ));
-    }
-    if offset_counters.len() != 2 {
-        return value_error(format!(
-            "offset counters vector must have length 2, got: {}",
-            offset_counters.len(),
-        ));
-    }
-
-    let result = blake2b::F(
+    let result = checked_compress(
         rounds,
-        &starting_state,
-        &block,
-        &offset_counters,
+        starting_state,
+        block,
+        offset_counters,
         final_block_flag,
     );
 
-    Ok(PyBytes::new(py, &result).into())
+    match result {
+        Err(msg) => Err(ValueError::py_err(msg)),
+        Ok(ok) => Ok(PyBytes::new(py, &ok).into()),
+    }
 }
 
 /// Functions for calculating blake2b hashes.
 #[pymodule]
 fn blake2b(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_wrapped(wrap_pyfunction!(extract_parameters))?;
+    m.add_wrapped(wrap_pyfunction!(decode_parameters))?;
     m.add_wrapped(wrap_pyfunction!(compress))?;
 
     Ok(())

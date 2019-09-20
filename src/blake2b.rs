@@ -85,7 +85,7 @@ pub type CompressArgs = (usize, [u64; 8], [u64; 16], [u64; 2], bool);
 /// `input`.
 ///
 /// See here: https://eips.ethereum.org/EIPS/eip-152#specification
-pub fn extract_parameters(input: &[u8]) -> Result<CompressArgs, String> {
+pub fn decode_parameters(input: &[u8]) -> Result<CompressArgs, String> {
     if input.len() != 213 {
         return Err(format!(
             "input length for blake2 F precompile should be exactly 213 bytes, got: {}",
@@ -260,7 +260,7 @@ mod tests {
     fn test_f_success() {
         for (inp, expected) in FAST_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-            let blake2_params = extract_parameters(&input_bytes).unwrap();
+            let blake2_params = decode_parameters(&input_bytes).unwrap();
             let (rounds, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
             let result_bytes = F(
@@ -280,7 +280,7 @@ mod tests {
     fn test_f_slow() {
         for (inp, expected) in SLOW_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-            let blake2_params = extract_parameters(&input_bytes).unwrap();
+            let blake2_params = decode_parameters(&input_bytes).unwrap();
             let (rounds, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
             let result_bytes = F(
@@ -307,7 +307,7 @@ mod tests {
         );
 
         let input_bytes = hex::decode(inp).unwrap();
-        let blake2_params = extract_parameters(&input_bytes).unwrap();
+        let blake2_params = decode_parameters(&input_bytes).unwrap();
         let (rounds, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
         let t_start = std::time::SystemTime::now();
@@ -322,21 +322,18 @@ mod tests {
         .to_vec();
 
         if let Ok(elapsed) = t_start.elapsed() {
-            eprintln!(
-                "test_blake2b_compress_eip_152_vec_8: took {} secs",
-                elapsed.as_secs()
-            );
+            eprintln!("test_f_eip_152_vec_8: took {} secs", elapsed.as_secs());
         }
 
         assert_eq!(hex::encode(result_bytes), *expected);
     }
 
     #[test]
-    fn test_extract_parameters_error() {
+    fn test_decode_parameters_error() {
         for inp in ERROR_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
 
-            if extract_parameters(&input_bytes).is_ok() {
+            if decode_parameters(&input_bytes).is_ok() {
                 panic!("expected Result::Err but got Result::Ok");
             }
         }
@@ -354,7 +351,7 @@ mod bench {
     fn rounds_benchmark(rounds: usize, bencher: &mut Bencher) {
         let input_bytes = hex::decode("0000000048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
 
-        let blake2_params = extract_parameters(&input_bytes).unwrap();
+        let blake2_params = decode_parameters(&input_bytes).unwrap();
         let (_, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
         bencher.iter(|| {
