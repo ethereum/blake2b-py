@@ -1,6 +1,5 @@
 from hypothesis import (
     given,
-    settings,
     strategies as st,
 )
 
@@ -38,11 +37,14 @@ def test_equivalence_with_python_impl(
         offset_counter,
         final_block_flag,
     )
-    rust_result = blake2b.blake2b_compress(
+
+    word_block = list(reference_impl.get_64_bit_little_endian_words(block))
+    rust_result = blake2b.compress(
         rounds,
         starting_state,
-        block,
+        word_block,
         offset_counter,
         final_block_flag,
     )
+
     assert python_result == rust_result

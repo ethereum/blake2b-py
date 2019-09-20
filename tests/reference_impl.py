@@ -81,14 +81,14 @@ def extract_blake2b_parameters(input_bytes: bytes) -> TFCompressArgs:
 
     h_state = cast(
         TMessageBlock,
-        tuple(_get_64_bit_little_endian_words(input_bytes[4:68])),
+        tuple(get_64_bit_little_endian_words(input_bytes[4:68])),
     )
 
     message = input_bytes[68:196]
 
     t_offset_counters = cast(
         Tuple[int, int],
-        tuple(_get_64_bit_little_endian_words(input_bytes[196:212])),
+        tuple(get_64_bit_little_endian_words(input_bytes[196:212])),
     )
 
     final_block_int = to_int(input_bytes[212])
@@ -105,7 +105,7 @@ def extract_blake2b_parameters(input_bytes: bytes) -> TFCompressArgs:
     return rounds, h_state, message, t_offset_counters, final_block_flag
 
 
-def _get_64_bit_little_endian_words(compact_bytes: bytes) -> Iterable[int]:
+def get_64_bit_little_endian_words(compact_bytes: bytes) -> Iterable[int]:
     remaining_bytes = compact_bytes
     if len(remaining_bytes) % 8 != 0:
         raise ValueError(
