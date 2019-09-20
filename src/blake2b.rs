@@ -38,48 +38,22 @@ fn u64_from_le(input: &[u8]) -> u64 {
     u64::from_le_bytes(input.try_into().unwrap())
 }
 
-pub type TFCompressArgs = (usize, Vec<u64>, Vec<u8>, Vec<u64>, bool);
-
-pub fn extract_blake2b_parameters(input: &[u8]) -> Result<TFCompressArgs, String> {
-    if input.len() != 213 {
-        return Err(format!(
-            "input length for Blake2 F precompile should be exactly 213 bytes, got: {}",
-            input.len()
-        ));
-    }
-
-    let rounds = u32::from_be_bytes((&input[..4]).try_into().unwrap()) as usize;
-    let h_starting_state = vec![
-        u64_from_le(&input[4..12]),
-        u64_from_le(&input[12..20]),
-        u64_from_le(&input[20..28]),
-        u64_from_le(&input[28..36]),
-        u64_from_le(&input[36..44]),
-        u64_from_le(&input[44..52]),
-        u64_from_le(&input[52..60]),
-        u64_from_le(&input[60..68]),
-    ];
-    let block = input[68..196].to_vec();
-    let t_offset_counters = vec![u64_from_le(&input[196..204]), u64_from_le(&input[204..212])];
-    let final_block_flag = match input[212] {
-        0 => false,
-        1 => true,
-        x => {
-            return Err(format!("incorrect final block indicator flag, got: {}", x));
-        }
-    };
-
-    Ok((
-        rounds,
-        h_starting_state,
-        block,
-        t_offset_counters,
-        final_block_flag,
-    ))
+#[inline]
+fn state_words(input: &[u8]) -> [u64; 8] {
+    [
+        u64_from_le(&input[..8]),
+        u64_from_le(&input[8..16]),
+        u64_from_le(&input[16..24]),
+        u64_from_le(&input[24..32]),
+        u64_from_le(&input[32..40]),
+        u64_from_le(&input[40..48]),
+        u64_from_le(&input[48..56]),
+        u64_from_le(&input[56..64]),
+    ]
 }
 
 #[inline]
-fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
+fn block_words(input: &[u8]) -> [u64; 16] {
     [
         u64_from_le(&input[..8]),
         u64_from_le(&input[8..16]),
@@ -98,6 +72,42 @@ fn block_to_16_le_words(input: &[u8]) -> [u64; 16] {
         u64_from_le(&input[112..120]),
         u64_from_le(&input[120..128]),
     ]
+}
+
+#[inline]
+fn counter_words(input: &[u8]) -> [u64; 2] {
+    [u64_from_le(&input[..8]), u64_from_le(&input[8..16])]
+}
+
+pub type CompressArgs = (usize, [u64; 8], [u64; 16], [u64; 2], bool);
+
+pub fn extract_blake2b_parameters(input: &[u8]) -> Result<CompressArgs, String> {
+    if input.len() != 213 {
+        return Err(format!(
+            "input length for blake2 F precompile should be exactly 213 bytes, got: {}",
+            input.len()
+        ));
+    }
+
+    let rounds = u32::from_be_bytes((&input[..4]).try_into().unwrap()) as usize;
+    let starting_state = state_words(&input[4..68]);
+    let block = block_words(&input[68..196]);
+    let offset_counters = counter_words(&input[196..212]);
+    let final_block_flag = match input[212] {
+        0 => false,
+        1 => true,
+        x => {
+            return Err(format!("incorrect final block indicator flag, got: {}", x));
+        }
+    };
+
+    Ok((
+        rounds,
+        starting_state,
+        block,
+        offset_counters,
+        final_block_flag,
+    ))
 }
 
 /// Rotate bits in the unsigned 64-bit integer `x` right `n` bits.
@@ -130,11 +140,11 @@ fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) 
 pub fn blake2b_compress(
     num_rounds: usize,
     h_starting_state: &[u64],
-    block: &[u8],
+    block: &[u64],
     t_offset_counters: &[u64],
     final_block_flag: bool,
 ) -> [u8; 64] {
-    let m = block_to_16_le_words(block);
+    let m = block;
 
     let mut v = [
         h_starting_state[0],          // 0

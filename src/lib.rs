@@ -12,7 +12,7 @@ fn value_error<V>(msg: String) -> PyResult<V> {
     Err(ValueError::py_err(msg))
 }
 
-type CompressArgs = (usize, Vec<u64>, PyObject, Vec<u64>, bool);
+type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 
 /// extract_blake2b_parameters(input)
 /// --
@@ -27,7 +27,7 @@ type CompressArgs = (usize, Vec<u64>, PyObject, Vec<u64>, bool);
 ///
 /// Returns
 /// ----------
-/// out : (int, List[int], bytes, List[int], bool)
+/// out : (int, List[int], List[int], List[int], bool)
 ///     A tuple of parameters to pass to the ``blake2b_compress`` function.
 #[pyfunction]
 fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressArgs> {
@@ -39,9 +39,9 @@ fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressAr
             let (rounds, state, block, offsets, flag) = args;
             Ok((
                 rounds,
-                state,
-                PyBytes::new(py, &block).into(),
-                offsets,
+                state.to_vec(),
+                block.to_vec(),
+                offsets.to_vec(),
                 flag,
             ))
         }
@@ -61,8 +61,8 @@ fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressAr
 /// h_starting_state : List[int]
 ///     A vector of 8 64-bit integers representing the starting state of the
 ///     hash function.
-/// block : bytes, List[int]
-///     A vector of 128 bytes representing the message block to be hashed.
+/// block : List[int]
+///     A vector of 16 64-bit integers representing the message block to be hashed.
 /// t_offset_counters : List[int]
 ///     A vector of 2 64-bit integers representing the message byte offset at
 ///     the end of the current block.
@@ -78,7 +78,7 @@ fn blake2b_compress(
     py: Python,
     num_rounds: usize,
     h_starting_state: Vec<u64>,
-    block: Vec<u8>,
+    block: Vec<u64>,
     t_offset_counters: Vec<u64>,
     final_block_flag: bool,
 ) -> PyResult<PyObject> {
@@ -88,9 +88,9 @@ fn blake2b_compress(
             h_starting_state.len(),
         ));
     }
-    if block.len() != 128 {
+    if block.len() != 16 {
         return value_error(format!(
-            "block vector must have length 128, got: {}",
+            "block vector must have length 16, got: {}",
             block.len(),
         ));
     }
