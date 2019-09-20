@@ -1,5 +1,6 @@
-pip>=19.1
-pytest>=3.5.0
-setuptools-rust>=0.10.2
-pytest-benchmark>=3.1.1
+pip
+pytest
+pytest-benchmark
+tox
 hypothesis
+maturin

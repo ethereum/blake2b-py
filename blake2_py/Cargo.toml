@@ -7,13 +7,13 @@ license = "MIT"
 repository = "https://github.com/davesque/blake2"
 description = "Python bindings for blake2 compression in Rust."
 
+[dependencies]
+blake2 = { path = "../", version = "0.1.0" }
+pyo3 = { version = "0.8", features = ["extension-module"] }
+
 [lib]
 name = "blake2"
 crate-type = ["cdylib"]
-
-[dependencies]
-pyo3 = { version = "0.8", features = ["extension-module"] }
-blake2 = { path = "../", version = "0.1.0" }
 
 [profile.dev]
 overflow-checks = false
