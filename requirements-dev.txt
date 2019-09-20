@@ -1,6 +1,3 @@
-pip
 pytest
 pytest-benchmark
-tox
 hypothesis
-maturin

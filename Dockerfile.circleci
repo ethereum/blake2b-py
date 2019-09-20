@@ -47,4 +47,7 @@ RUN python$PYTHON_VERSION -mvenv /venv
 ENV PATH=/venv/bin:$PATH
 RUN pip install --upgrade pip setuptools wheel
 
+# Install packages required for tests
+RUN pip install tox maturin
+
 CMD ["/bin/bash"]
