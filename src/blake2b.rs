@@ -201,7 +201,6 @@ mod tests {
 
     use super::*;
 
-    use quickcheck::TestResult;
     use test::Bencher;
 
     const FAST_EXAMPLES: &[(&str, &str)] = &[

@@ -12,8 +12,6 @@ pyo3 = { version = "0.8", features = ["extension-module"] }
 
 [dev-dependencies]
 hex = "0.4"
-quickcheck = "0.9"
-quickcheck_macros = "0.8"
 
 [lib]
 name = "blake2b"
