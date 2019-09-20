@@ -39,7 +39,7 @@ fn u64_from_le(input: &[u8]) -> u64 {
 }
 
 #[inline]
-fn state_words(input: &[u8]) -> [u64; 8] {
+fn eight_words(input: &[u8]) -> [u64; 8] {
     [
         u64_from_le(&input[..8]),
         u64_from_le(&input[8..16]),
@@ -53,7 +53,7 @@ fn state_words(input: &[u8]) -> [u64; 8] {
 }
 
 #[inline]
-fn block_words(input: &[u8]) -> [u64; 16] {
+fn sixteen_words(input: &[u8]) -> [u64; 16] {
     [
         u64_from_le(&input[..8]),
         u64_from_le(&input[8..16]),
@@ -75,7 +75,7 @@ fn block_words(input: &[u8]) -> [u64; 16] {
 }
 
 #[inline]
-fn counter_words(input: &[u8]) -> [u64; 2] {
+fn two_words(input: &[u8]) -> [u64; 2] {
     [u64_from_le(&input[..8]), u64_from_le(&input[8..16])]
 }
 
@@ -90,9 +90,9 @@ pub fn extract_parameters(input: &[u8]) -> Result<CompressArgs, String> {
     }
 
     let rounds = u32::from_be_bytes((&input[..4]).try_into().unwrap()) as usize;
-    let starting_state = state_words(&input[4..68]);
-    let block = block_words(&input[68..196]);
-    let offset_counters = counter_words(&input[196..212]);
+    let starting_state = eight_words(&input[4..68]);
+    let block = sixteen_words(&input[68..196]);
+    let offset_counters = two_words(&input[196..212]);
     let final_block_flag = match input[212] {
         0 => false,
         1 => true,
