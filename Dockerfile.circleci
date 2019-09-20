@@ -42,4 +42,8 @@ RUN apt-get install -y \
         python$PYTHON_VERSION-dev \
         python$PYTHON_VERSION-venv
 
+# Create virtualenv and update path
+RUN python$PYTHON_VERSION -mvenv /venv
+ENV PATH=/venv/bin:$PATH
+
 CMD ["/bin/bash"]
