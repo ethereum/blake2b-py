@@ -3,7 +3,7 @@ version: 2.0
 common: &common
   working_directory: ~/repo
   docker:
-    - image: davesque/rust:nightly-py37
+    - image: davesque/rust-python:nightly-py37
 
 jobs:
   core:
@@ -25,11 +25,8 @@ jobs:
           keys:
             - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
       - run:
-          name: create virtualenv
-          command: python3.7 -mvenv venv
-      - run:
           name: run tests
-          command: source venv/bin/activate && make test_rust
+          command: make test_rust
       - save_cache:
           paths:
             - target
