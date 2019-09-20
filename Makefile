@@ -22,10 +22,19 @@ test_all: test_rust test_rust_eip_152_vec_8 bench_rust test_python
 clean:
 	rm -rf *.egg-info build dist target pip-wheel-metadata
 
-build_docker_test_env:
-	docker build --tag=davesque/rust-python .
+build_docker:
+	docker build \
+		--tag=davesque/rust:nightly .
+	docker build \
+		--build-arg=PYTHON_VERSION=3.6 \
+		--tag=davesque/rust:nightly-py36 .
+	docker build \
+		--build-arg=PYTHON_VERSION=3.7 \
+		--tag=davesque/rust:nightly-py37 .
 
-push_docker_test_env:
-	docker push davesque/rust-python
+push_docker:
+	docker push davesque/rust:nightly
+	docker push davesque/rust:nightly-py36
+	docker push davesque/rust:nightly-py37
 
 .PHONY: test_rust test_rust_eip_152_vec_8 bench_rust test_python test_all clean
