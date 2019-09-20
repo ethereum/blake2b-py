@@ -26,13 +26,13 @@ clean:
 build_docker:
 	docker build -f Dockerfile.circleci \
 		--build-arg=PYTHON_VERSION=3.6 \
-		--tag=davesque/rust:nightly-py36 .
+		--tag=davesque/rust-python:nightly-py36 .
 	docker build -f Dockerfile.circleci \
 		--build-arg=PYTHON_VERSION=3.7 \
-		--tag=davesque/rust:nightly-py37 .
+		--tag=davesque/rust-python:nightly-py37 .
 
 push_docker:
-	docker push davesque/rust:nightly-py36
-	docker push davesque/rust:nightly-py37
+	docker push davesque/rust-python:nightly-py36
+	docker push davesque/rust-python:nightly-py37
 
 .PHONY: test_rust test_rust_eip_152_vec_8 bench test_python test_all clean
