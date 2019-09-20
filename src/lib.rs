@@ -30,7 +30,7 @@ type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 /// out : (int, List[int], List[int], List[int], bool)
 ///     A tuple of parameters to pass to the ``blake2b_compress`` function.
 #[pyfunction]
-fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressArgs> {
+fn extract_blake2b_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
     let result = blake2b::extract_blake2b_parameters(&input);
 
     match result {
@@ -48,7 +48,7 @@ fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressAr
     }
 }
 
-/// blake2b_compress(num_rounds, h_starting_state, block, t_offset_counters,
+/// blake2b_compress(rounds, starting_state, block, offset_counters,
 ///     final_block_flag)
 /// --
 ///
@@ -56,14 +56,14 @@ fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressAr
 ///
 /// Parameters
 /// ----------
-/// num_rounds : int
+/// rounds : int
 ///     The number of rounds of mixing to occur during hashing.
-/// h_starting_state : List[int]
+/// starting_state : List[int]
 ///     A vector of 8 64-bit integers representing the starting state of the
 ///     hash function.
 /// block : List[int]
 ///     A vector of 16 64-bit integers representing the message block to be hashed.
-/// t_offset_counters : List[int]
+/// offset_counters : List[int]
 ///     A vector of 2 64-bit integers representing the message byte offset at
 ///     the end of the current block.
 /// final_block_flag : bool
@@ -76,16 +76,16 @@ fn extract_blake2b_parameters(py: Python, input: Vec<u8>) -> PyResult<CompressAr
 #[pyfunction]
 fn blake2b_compress(
     py: Python,
-    num_rounds: usize,
-    h_starting_state: Vec<u64>,
+    rounds: usize,
+    starting_state: Vec<u64>,
     block: Vec<u64>,
-    t_offset_counters: Vec<u64>,
+    offset_counters: Vec<u64>,
     final_block_flag: bool,
 ) -> PyResult<PyObject> {
-    if h_starting_state.len() != 8 {
+    if starting_state.len() != 8 {
         return value_error(format!(
             "starting state vector must have length 8, got: {}",
-            h_starting_state.len(),
+            starting_state.len(),
         ));
     }
     if block.len() != 16 {
@@ -94,18 +94,18 @@ fn blake2b_compress(
             block.len(),
         ));
     }
-    if t_offset_counters.len() != 2 {
+    if offset_counters.len() != 2 {
         return value_error(format!(
             "offset counters vector must have length 2, got: {}",
-            t_offset_counters.len(),
+            offset_counters.len(),
         ));
     }
 
     let result = blake2b::blake2b_compress(
-        num_rounds,
-        &h_starting_state,
+        rounds,
+        &starting_state,
         &block,
-        &t_offset_counters,
+        &offset_counters,
         final_block_flag,
     );
 
