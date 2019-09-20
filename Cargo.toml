@@ -1,11 +1,11 @@
 [package]
-name = "blake2"
+name = "blake2b-py"
 version = "0.1.0"
 authors = ["David Sanders <davesque@gmail.com>"]
 edition = "2018"
 license = "MIT"
-repository = "https://github.com/davesque/blake2"
-description = "Blake2 compression in Rust with Python bindings."
+repository = "https://github.com/davesque/blake2b-py"
+description = "Blake2b hashing in Rust with Python bindings."
 
 [dev-dependencies]
 pyo3 = "0.8"
