@@ -317,6 +317,17 @@ mod tests {
         assert_eq!(hex::encode(result_bytes), *expected);
     }
 
+    #[test]
+    fn test_extract_blake2b_parameters_error() {
+        for inp in ERROR_EXAMPLES {
+            let input_bytes = hex::decode(inp).unwrap();
+
+            if extract_blake2b_parameters(&input_bytes).is_ok() {
+                panic!("expected Result::Err but got Result::Ok");
+            }
+        }
+    }
+
     fn blake2b_compress_benchmark(rounds: usize, bencher: &mut Bencher) {
         let input_bytes = hex::decode("0000000048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
 
