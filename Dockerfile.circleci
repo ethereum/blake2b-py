@@ -45,5 +45,6 @@ RUN apt-get install -y \
 # Create virtualenv and update path
 RUN python$PYTHON_VERSION -mvenv /venv
 ENV PATH=/venv/bin:$PATH
+RUN pip install --upgrade pip setuptools wheel
 
 CMD ["/bin/bash"]
