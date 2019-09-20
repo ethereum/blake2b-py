@@ -33,21 +33,15 @@ ARG PYTHON_VERSION
 
 # Setup deadsnakes ppa for multiple python versions
 RUN DEADSNAKES_LIST="/etc/apt/sources.list.d/deadsnakes.list"; \
-	if [ -n "$PYTHON_VERSION" ]; then \
-		printf 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
-		&& printf 'deb-src http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
-		&& gpg --keyserver keyserver.ubuntu.com --recv-keys 6A755776 \
-		&& gpg --export 6A755776 | apt-key add - \
-		&& apt-get update \
-		; \
-	fi
+    printf 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
+    && printf 'deb-src http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
+    && gpg --keyserver keyserver.ubuntu.com --recv-keys 6A755776 \
+    && gpg --export 6A755776 | apt-key add - \
+    && apt-get update
 
 # Install python
-RUN if [ -n "$PYTHON_VERSION" ]; then \
-		apt-get install -y \
-			python$PYTHON_VERSION-dev \
-			python$PYTHON_VERSION-venv \
-		; \
-	fi
+RUN apt-get install -y \
+        python$PYTHON_VERSION-dev \
+        python$PYTHON_VERSION-venv
 
 CMD ["/bin/bash"]
