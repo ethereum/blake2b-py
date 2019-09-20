@@ -7,11 +7,17 @@ license = "MIT"
 repository = "https://github.com/davesque/blake2b-py"
 description = "Blake2b hashing in Rust with Python bindings."
 
+[dependencies]
+pyo3 = { version = "0.8", features = ["extension-module"] }
+
 [dev-dependencies]
-pyo3 = "0.8"
 hex = "0.4"
 quickcheck = "0.9"
 quickcheck_macros = "0.8"
+
+[lib]
+name = "blake2b"
+crate-type = ["cdylib"]
 
 [profile.dev]
 overflow-checks = false

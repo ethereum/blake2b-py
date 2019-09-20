@@ -25,4 +25,7 @@ bench:
 test_short: test test_against_python
 test_all: test test_against_python bench test_eip_152_vec_8
 
-.PHONY: test test_against_python test_eip_152_vec_8 bench test_short test_all
+clean:
+	rm -rf *.egg-info build dist target pip-wheel-metadata
+
+.PHONY: test test_against_python test_eip_152_vec_8 bench test_short test_all clean
