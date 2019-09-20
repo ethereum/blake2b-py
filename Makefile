@@ -8,7 +8,7 @@ test_rust:
 test_rust_eip_152_vec_8:
 	@echo ~~~~~~~~~~~~~~~ Running slow EIP 152 test vector 8 ~~~~~~~~~~~~~~~
 	cargo test --release \
-		test_blake2b_compress_eip_152_vec_8 \
+		test_f_compress_eip_152_vec_8 \
 		-- --ignored --nocapture
 
 bench:
