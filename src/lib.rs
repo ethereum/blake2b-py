@@ -14,7 +14,7 @@ fn value_error<V>(msg: String) -> PyResult<V> {
 
 type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 
-/// extract_blake2b_parameters(input)
+/// extract_parameters(input)
 /// --
 ///
 /// Extract parameters for the ``blake2b_compress`` function from a test
@@ -30,8 +30,8 @@ type CompressArgs = (usize, Vec<u64>, Vec<u64>, Vec<u64>, bool);
 /// out : (int, List[int], List[int], List[int], bool)
 ///     A tuple of parameters to pass to the ``blake2b_compress`` function.
 #[pyfunction]
-fn extract_blake2b_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
-    let result = blake2b::extract_blake2b_parameters(&input);
+fn extract_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
+    let result = blake2b::extract_parameters(&input);
 
     match result {
         Err(msg) => Err(PyErr::new::<ValueError, _>(msg)),
@@ -48,7 +48,7 @@ fn extract_blake2b_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
     }
 }
 
-/// blake2b_compress(rounds, starting_state, block, offset_counters,
+/// compress(rounds, starting_state, block, offset_counters,
 ///     final_block_flag)
 /// --
 ///
@@ -74,7 +74,7 @@ fn extract_blake2b_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
 /// out : bytes
 ///     A vector of 64 bytes representing the blake2b hash of the input data.
 #[pyfunction]
-fn blake2b_compress(
+fn compress(
     py: Python,
     rounds: usize,
     starting_state: Vec<u64>,
@@ -101,7 +101,7 @@ fn blake2b_compress(
         ));
     }
 
-    let result = blake2b::blake2b_compress(
+    let result = blake2b::F(
         rounds,
         &starting_state,
         &block,
@@ -115,8 +115,8 @@ fn blake2b_compress(
 /// Functions for calculating blake2b hashes.
 #[pymodule]
 fn blake2b(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_wrapped(wrap_pyfunction!(extract_blake2b_parameters))?;
-    m.add_wrapped(wrap_pyfunction!(blake2b_compress))?;
+    m.add_wrapped(wrap_pyfunction!(extract_parameters))?;
+    m.add_wrapped(wrap_pyfunction!(compress))?;
 
     Ok(())
 }

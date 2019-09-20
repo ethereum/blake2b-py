@@ -81,7 +81,7 @@ fn counter_words(input: &[u8]) -> [u64; 2] {
 
 pub type CompressArgs = (usize, [u64; 8], [u64; 16], [u64; 2], bool);
 
-pub fn extract_blake2b_parameters(input: &[u8]) -> Result<CompressArgs, String> {
+pub fn extract_parameters(input: &[u8]) -> Result<CompressArgs, String> {
     if input.len() != 213 {
         return Err(format!(
             "input length for blake2 F precompile should be exactly 213 bytes, got: {}",
@@ -118,15 +118,14 @@ fn rotate_bits(x: u64, n: usize) -> u64 {
     (x >> n) ^ (x << (WORDBITS - n))
 }
 
-/// Mix two input words, "x" and "y", into four words indexed by "a", "b", "c", and "d" in the
-/// working vector "v".
+/// The blake2b mixing function G.
 ///
 /// See here: https://tools.ietf.org/html/rfc7693#section-3.1
 #[allow(non_snake_case)]
 #[inline]
 fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) {
-    // RFC 7693 includes the use of mod operators in this section.  We don't need them since mod is
-    // implied by u64 arithmetic.
+    // RFC 7693 includes the use of mod operations with operand 2 ** 64.  We omit those because we
+    // get them for free with u64 arithmetic.
     v[a] = v[a] + v[b] + x;
     v[d] = rotate_bits(v[d] ^ v[a], ROT1);
     v[c] = v[c] + v[d];
@@ -137,7 +136,11 @@ fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) 
     v[b] = rotate_bits(v[b] ^ v[c], ROT4);
 }
 
-pub fn blake2b_compress(
+/// The blake2b compression function F.
+///
+/// See here: https://tools.ietf.org/html/rfc7693#section-3.2
+#[allow(non_snake_case)]
+pub fn F(
     rounds: usize,
     starting_state: &[u64],
     block: &[u64],
@@ -185,7 +188,7 @@ pub fn blake2b_compress(
         G(&mut v, 3, 4, 9, 14, m[s[14]], m[s[15]]);
     }
 
-    let result_message_word_bytes = [
+    let result_words = [
         (h[0] ^ v[0] ^ v[8]).to_le_bytes(),
         (h[1] ^ v[1] ^ v[9]).to_le_bytes(),
         (h[2] ^ v[2] ^ v[10]).to_le_bytes(),
@@ -197,7 +200,7 @@ pub fn blake2b_compress(
     ];
 
     let mut result = [0u8; 64];
-    for (i, word_bytes) in result_message_word_bytes.into_iter().enumerate() {
+    for (i, word_bytes) in result_words.into_iter().enumerate() {
         for (j, x) in word_bytes.into_iter().enumerate() {
             result[i * 8 + j] = *x;
         }
@@ -256,10 +259,10 @@ mod tests {
     fn test_blake2b_compress_success() {
         for (inp, expected) in FAST_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-            let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+            let blake2_params = extract_parameters(&input_bytes).unwrap();
             let (rounds, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
-            let result_bytes = blake2b_compress(
+            let result_bytes = F(
                 rounds,
                 &starting_state,
                 &block,
@@ -276,10 +279,10 @@ mod tests {
     fn test_blake2b_compress_slow() {
         for (inp, expected) in SLOW_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
-            let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+            let blake2_params = extract_parameters(&input_bytes).unwrap();
             let (rounds, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
-            let result_bytes = blake2b_compress(
+            let result_bytes = F(
                 rounds,
                 &starting_state,
                 &block,
@@ -303,12 +306,12 @@ mod tests {
         );
 
         let input_bytes = hex::decode(inp).unwrap();
-        let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+        let blake2_params = extract_parameters(&input_bytes).unwrap();
         let (rounds, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
         let t_start = std::time::SystemTime::now();
 
-        let result_bytes = blake2b_compress(
+        let result_bytes = F(
             rounds,
             &starting_state,
             &block,
@@ -332,7 +335,7 @@ mod tests {
         for inp in ERROR_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
 
-            if extract_blake2b_parameters(&input_bytes).is_ok() {
+            if extract_parameters(&input_bytes).is_ok() {
                 panic!("expected Result::Err but got Result::Ok");
             }
         }
@@ -341,11 +344,11 @@ mod tests {
     fn blake2b_compress_benchmark(rounds: usize, bencher: &mut Bencher) {
         let input_bytes = hex::decode("0000000048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
 
-        let blake2_params = extract_blake2b_parameters(&input_bytes).unwrap();
+        let blake2_params = extract_parameters(&input_bytes).unwrap();
         let (_, starting_state, block, offset_counters, final_block_flag) = blake2_params;
 
         bencher.iter(|| {
-            blake2b_compress(
+            F(
                 rounds,
                 &starting_state,
                 &block,
