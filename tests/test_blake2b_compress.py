@@ -4,7 +4,7 @@ from hypothesis import (
     strategies as st,
 )
 
-import blake2
+import blake2b
 from . import reference_impl
 
 u8 = st.integers(min_value=0, max_value=2 ** 8 - 1)
@@ -41,7 +41,7 @@ def test_equivalence_with_python_impl(
         offset_counter,
         final_block_flag,
     )
-    rust_result = blake2.blake2b_compress(
+    rust_result = blake2b.blake2b_compress(
         rounds,
         starting_state,
         block,
