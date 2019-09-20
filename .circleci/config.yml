@@ -2,12 +2,12 @@ version: 2.0
 
 common: &common
   working_directory: ~/repo
-  docker:
-    - image: davesque/rust-python:nightly-py37
 
 jobs:
   core:
     <<: *common
+    docker:
+      - image: davesque/rust-python:nightly-py37
     steps:
       - checkout
       - run:
@@ -21,16 +21,9 @@ jobs:
           name: merge pull request base (3nd try)
           command: ./.circleci/merge_pr.sh
           when: on_fail
-      - restore_cache:
-          keys:
-            - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
       - run:
           name: run tests
           command: make test_rust
-      - save_cache:
-          paths:
-            - target
-          key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
 
   py36-integration:
     <<: *common
@@ -49,16 +42,30 @@ jobs:
           name: merge pull request base (3nd try)
           command: ./.circleci/merge_pr.sh
           when: on_fail
-      - restore_cache:
-          keys:
-            - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
       - run:
           name: run tests
           command: pip install -r requirements-dev.txt && maturin develop && pytest
-      - save_cache:
-          paths:
-            - target
-          key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+
+  py37-integration:
+    <<: *common
+    docker:
+      - image: davesque/rust-python:nightly-py37
+    steps:
+      - checkout
+      - run:
+          name: merge pull request base
+          command: ./.circleci/merge_pr.sh
+      - run:
+          name: merge pull request base (2nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - run:
+          name: merge pull request base (3nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - run:
+          name: run tests
+          command: pip install -r requirements-dev.txt && maturin develop && pytest
 
 workflows:
   version: 2
@@ -66,3 +73,4 @@ workflows:
     jobs:
       - core
       - py36-integration
+      - py37-integration
