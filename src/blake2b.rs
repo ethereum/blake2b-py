@@ -144,29 +144,31 @@ pub fn blake2b_compress(
     offset_counters: &[u64],
     final_block_flag: bool,
 ) -> [u8; 64] {
+    let h = starting_state;
     let m = block;
+    let t = offset_counters;
 
     let mut v = [
-        starting_state[0],          // 0
-        starting_state[1],          // 1
-        starting_state[2],          // 2
-        starting_state[3],          // 3
-        starting_state[4],          // 4
-        starting_state[5],          // 5
-        starting_state[6],          // 6
-        starting_state[7],          // 7
-        IV[0],                      // 8
-        IV[1],                      // 9
-        IV[2],                      // 10
-        IV[3],                      // 11
-        offset_counters[0] ^ IV[4], // 12
-        offset_counters[1] ^ IV[5], // 13
+        h[0],         // 0
+        h[1],         // 1
+        h[2],         // 2
+        h[3],         // 3
+        h[4],         // 4
+        h[5],         // 5
+        h[6],         // 6
+        h[7],         // 7
+        IV[0],        // 8
+        IV[1],        // 9
+        IV[2],        // 10
+        IV[3],        // 11
+        IV[4] ^ t[0], // 12
+        IV[5] ^ t[1], // 13
         if final_block_flag {
             MASKBITS ^ IV[6]
         } else {
             IV[6]
         }, // 14
-        IV[7],                      // 15
+        IV[7],        // 15
     ];
 
     for r in 0..rounds {
@@ -184,14 +186,14 @@ pub fn blake2b_compress(
     }
 
     let result_message_word_bytes = [
-        (starting_state[0] ^ v[0] ^ v[8]).to_le_bytes(),
-        (starting_state[1] ^ v[1] ^ v[9]).to_le_bytes(),
-        (starting_state[2] ^ v[2] ^ v[10]).to_le_bytes(),
-        (starting_state[3] ^ v[3] ^ v[11]).to_le_bytes(),
-        (starting_state[4] ^ v[4] ^ v[12]).to_le_bytes(),
-        (starting_state[5] ^ v[5] ^ v[13]).to_le_bytes(),
-        (starting_state[6] ^ v[6] ^ v[14]).to_le_bytes(),
-        (starting_state[7] ^ v[7] ^ v[15]).to_le_bytes(),
+        (h[0] ^ v[0] ^ v[8]).to_le_bytes(),
+        (h[1] ^ v[1] ^ v[9]).to_le_bytes(),
+        (h[2] ^ v[2] ^ v[10]).to_le_bytes(),
+        (h[3] ^ v[3] ^ v[11]).to_le_bytes(),
+        (h[4] ^ v[4] ^ v[12]).to_le_bytes(),
+        (h[5] ^ v[5] ^ v[13]).to_le_bytes(),
+        (h[6] ^ v[6] ^ v[14]).to_le_bytes(),
+        (h[7] ^ v[7] ^ v[15]).to_le_bytes(),
     ];
 
     let mut result = [0u8; 64];
