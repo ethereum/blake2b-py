@@ -54,7 +54,7 @@ jobs:
             - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
       - run:
           name: run tests
-          command: env && pip install -r requirements-dev.txt && tox -e py36
+          command: pip install -r requirements-dev.txt && pytest
       - save_cache:
           paths:
             - target
