@@ -2,8 +2,7 @@ test: test_rust test_python
 
 test_rust:
 	@echo ~~~~~~~~~~~~~~~ Running rust implementation unit tests ~~~~~~~~~~~~~~~
-	cargo test --release \
-		test_
+	cargo test test_
 
 test_python:
 	@echo ~~~~~~~~~~~~~~~ Running python binding tests ~~~~~~~~~~~~~~~
