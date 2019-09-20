@@ -2,39 +2,83 @@ version: 2.0
 
 common: &common
   working_directory: ~/repo
-  steps:
-    - checkout
-    - run:
-        name: merge pull request base
-        command: ./.circleci/merge_pr.sh
-    - run:
-        name: merge pull request base (2nd try)
-        command: ./.circleci/merge_pr.sh
-        when: on_fail
-    - run:
-        name: merge pull request base (3nd try)
-        command: ./.circleci/merge_pr.sh
-        when: on_fail
-    - restore_cache:
-        keys:
-          - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
-    - run:
-        name: run tests
-        command: make test_rust test_python
-    - save_cache:
-        paths:
-          - target
-        key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+  docker:
+    - image: davesque/rust-python
 
 jobs:
   core:
     <<: *common
-    docker:
-      - image: davesque/rust-python
-        environment:
-          TOXENV: doctest
+    steps:
+      - checkout
+      - run:
+          name: merge pull request base
+          command: ./.circleci/merge_pr.sh
+      - run:
+          name: merge pull request base (2nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - run:
+          name: merge pull request base (3nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - restore_cache:
+          keys:
+            - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+      - run:
+          name: run tests
+          command: make test_rust
+      - save_cache:
+          paths:
+            - target
+          key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+
+  py36:
+    <<: *common
+    steps:
+      - restore_cache:
+          keys:
+            - v4-cache-pyenv
+      - run:
+          name: setup python
+          command: |
+            $HOME/.pyenv/bin/pyenv install 3.6.9
+            echo "export PATH=$HOME/.pyenv/versions/3.6.9/bin:$PATH" >> $BASH_ENV
+
+      - checkout
+      - run:
+          name: merge pull request base
+          command: ./.circleci/merge_pr.sh
+      - run:
+          name: merge pull request base (2nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+      - run:
+          name: merge pull request base (3nd try)
+          command: ./.circleci/merge_pr.sh
+          when: on_fail
+
+      - restore_cache:
+          keys:
+            - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+      - run:
+          name: pip install
+          command: pip install -r requirements-dev.txt
+      - run:
+          name: run tests
+          command: rustup run nightly tox -e py36
+      - save_cache:
+          paths:
+            - target
+          key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+
+      - save_cache:
+          paths:
+            - /home/circleci/.pyenv
+          key: v4-cache-pyenv
+
 workflows:
   version: 2
   test:
     jobs:
       - core
+      - py36
