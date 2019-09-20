@@ -212,11 +212,8 @@ pub fn F(
 #[cfg(test)]
 mod tests {
     extern crate hex;
-    extern crate test;
 
     use super::*;
-
-    use test::Bencher;
 
     const FAST_EXAMPLES: &[(&str, &str)] = &[
         (
@@ -256,7 +253,7 @@ mod tests {
     ];
 
     #[test]
-    fn test_blake2b_compress_success() {
+    fn test_f_success() {
         for (inp, expected) in FAST_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
             let blake2_params = extract_parameters(&input_bytes).unwrap();
@@ -276,7 +273,7 @@ mod tests {
     }
 
     #[test]
-    fn test_blake2b_compress_slow() {
+    fn test_f_slow() {
         for (inp, expected) in SLOW_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
             let blake2_params = extract_parameters(&input_bytes).unwrap();
@@ -299,7 +296,7 @@ mod tests {
     /// (https://eips.ethereum.org/EIPS/eip-152#test-vector-8)
     #[test]
     #[ignore]
-    fn test_blake2b_compress_eip_152_vec_8() {
+    fn test_f_eip_152_vec_8() {
         let (inp, expected) = ( // 2 ** 32 - 1 rounds
             "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001",
             "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01846e6b5df8cc7703041bbceb571de6631d2615",
@@ -331,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_blake2b_parameters_error() {
+    fn test_extract_parameters_error() {
         for inp in ERROR_EXAMPLES {
             let input_bytes = hex::decode(inp).unwrap();
 
@@ -340,8 +337,17 @@ mod tests {
             }
         }
     }
+}
 
-    fn blake2b_compress_benchmark(rounds: usize, bencher: &mut Bencher) {
+#[cfg(test)]
+mod bench {
+    extern crate test;
+
+    use super::*;
+
+    use test::Bencher;
+
+    fn rounds_benchmark(rounds: usize, bencher: &mut Bencher) {
         let input_bytes = hex::decode("0000000048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000001").unwrap();
 
         let blake2_params = extract_parameters(&input_bytes).unwrap();
@@ -360,17 +366,17 @@ mod tests {
     }
 
     #[bench]
-    fn bench_blake2b_compress_100_000(bencher: &mut Bencher) {
-        blake2b_compress_benchmark(100_000, bencher);
+    fn bench_100_000_rounds(bencher: &mut Bencher) {
+        rounds_benchmark(100_000, bencher);
     }
 
     #[bench]
-    fn bench_blake2b_compress_2_000_000(bencher: &mut Bencher) {
-        blake2b_compress_benchmark(2_000_000, bencher);
+    fn bench_2_000_000_rounds(bencher: &mut Bencher) {
+        rounds_benchmark(2_000_000, bencher);
     }
 
     #[bench]
-    fn bench_blake2b_compress_8_000_000(bencher: &mut Bencher) {
-        blake2b_compress_benchmark(8_000_000, bencher);
+    fn bench_8_000_000_rounds(bencher: &mut Bencher) {
+        rounds_benchmark(8_000_000, bencher);
     }
 }
