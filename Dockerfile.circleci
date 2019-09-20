@@ -27,8 +27,6 @@ RUN set -eux; \
     cargo --version; \
     rustc --version;
 
-ARG PYTHON_VERSION
-
 # Setup deadsnakes ppa for multiple python versions
 RUN DEADSNAKES_LIST="/etc/apt/sources.list.d/deadsnakes.list"; \
     printf 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
@@ -37,14 +35,18 @@ RUN DEADSNAKES_LIST="/etc/apt/sources.list.d/deadsnakes.list"; \
     && gpg --export 6A755776 | apt-key add - \
     && apt-get update
 
+ARG PYTHON_VERSION
+
 # Install python
 RUN apt-get install -y \
         python$PYTHON_VERSION-dev \
         python$PYTHON_VERSION-venv
 
-# Create virtualenv and update path
+# Create virtualenv and activate by default
 RUN python$PYTHON_VERSION -mvenv /venv
+ENV VIRTUAL_ENV=/venv
 ENV PATH=/venv/bin:$PATH
+
 RUN pip install --upgrade pip setuptools wheel
 
 CMD ["/bin/bash"]
