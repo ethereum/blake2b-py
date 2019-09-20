@@ -81,6 +81,10 @@ fn two_words(input: &[u8]) -> [u64; 2] {
 
 pub type CompressArgs = (usize, [u64; 8], [u64; 16], [u64; 2], bool);
 
+/// Decode blake2 precompile input parameters from the tightly packed encoding in the byte sequence
+/// `input`.
+///
+/// See here: https://eips.ethereum.org/EIPS/eip-152#specification
 pub fn extract_parameters(input: &[u8]) -> Result<CompressArgs, String> {
     if input.len() != 213 {
         return Err(format!(
@@ -110,7 +114,7 @@ pub fn extract_parameters(input: &[u8]) -> Result<CompressArgs, String> {
     ))
 }
 
-/// Rotate bits in the unsigned 64-bit integer `x` right `n` bits.
+/// Rotate bits in the unsigned 64-bit integer `x` to the right by `n` bits.
 ///
 /// See here: https://tools.ietf.org/html/rfc7693#section-2.3
 #[inline]
