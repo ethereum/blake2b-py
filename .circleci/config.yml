@@ -31,6 +31,7 @@ jobs:
           paths:
             - target
           key: v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
+
   py36-integration:
     <<: *common
     docker:
@@ -53,7 +54,7 @@ jobs:
             - v4-cache-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Cargo.toml" }}
       - run:
           name: run tests
-          command: pip install -r requirements-dev.txt && tox -e py36
+          command: env && pip install -r requirements-dev.txt && tox -e py36
       - save_cache:
           paths:
             - target
