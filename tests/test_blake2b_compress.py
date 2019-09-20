@@ -8,7 +8,7 @@ import blake2b
 from . import reference_impl
 
 u8 = st.integers(min_value=0, max_value=2 ** 8 - 1)
-u64 = st.integers(min_value=0, max_value=2 ** 32 - 1)
+u64 = st.integers(min_value=0, max_value=2 ** 64 - 1)
 
 rounds = u8
 starting_states = st.lists(u64, min_size=8, max_size=8)
@@ -17,9 +17,6 @@ offset_counters = st.lists(u64, min_size=2, max_size=2)
 final_block_flags = st.booleans()
 
 
-@settings(
-    max_examples=2,
-)
 @given(
     rounds,
     starting_states,
