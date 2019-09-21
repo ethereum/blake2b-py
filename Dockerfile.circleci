@@ -28,9 +28,9 @@ RUN set -eux; \
     rustc --version;
 
 # Setup deadsnakes ppa for multiple python versions
-RUN DEADSNAKES_LIST="/etc/apt/sources.list.d/deadsnakes.list"; \
-    printf 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
-    && printf 'deb-src http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $DEADSNAKES_LIST \
+RUN deadsnakes_list="/etc/apt/sources.list.d/deadsnakes.list"; \
+    printf 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $deadsnakes_list \
+    && printf 'deb-src http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main\n' >> $deadsnakes_list \
     && gpg --keyserver keyserver.ubuntu.com --recv-keys 6A755776 \
     && gpg --export 6A755776 | apt-key add - \
     && apt-get update
