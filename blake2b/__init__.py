@@ -67,10 +67,15 @@ def test():
             decode_and_compress(input_bytes),
         ).decode('utf8')
 
-        assert actual == expected, f'actual ({actual[:20]}...) != expected ({expected[:20]}...)'  # noqa: E501
+        assert actual == expected, (
+            f'actual ({actual[:20]}...) != expected ({expected[:20]}...)'
+        )
     logger.info('...OK')
 
-    logger.info('Checking errors properly raised for bad tightly packed input...')
+    logger.info(
+        'Checking errors properly raised for '
+        'bad tightly packed input...'
+    )
     for inp in ERROR_EXAMPLES:
         input_bytes = binascii.unhexlify(inp)
         try:
@@ -88,5 +93,7 @@ def test():
             decode_and_compress(input_bytes),
         ).decode('utf8')
 
-        assert actual == expected, f'actual ({actual[:20]}...) != expected ({expected[:20]}...)'  # noqa: E501
+        assert actual == expected, (
+            f'actual ({actual[:20]}...) != expected ({expected[:20]}...)'
+        )
     logger.info('...OK')
