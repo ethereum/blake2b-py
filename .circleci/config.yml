@@ -14,14 +14,6 @@ jobs:
           name: merge pull request base
           command: ./.circleci/merge_pr.sh
       - run:
-          name: merge pull request base (2nd try)
-          command: ./.circleci/merge_pr.sh
-          when: on_fail
-      - run:
-          name: merge pull request base (3nd try)
-          command: ./.circleci/merge_pr.sh
-          when: on_fail
-      - run:
           name: run tests
           command: make test_rust
 
@@ -35,14 +27,6 @@ jobs:
           name: merge pull request base
           command: ./.circleci/merge_pr.sh
       - run:
-          name: merge pull request base (2nd try)
-          command: ./.circleci/merge_pr.sh
-          when: on_fail
-      - run:
-          name: merge pull request base (3nd try)
-          command: ./.circleci/merge_pr.sh
-          when: on_fail
-      - run:
           name: run tests
           command: pip install -r requirements-dev.txt && maturin develop && pytest
 
@@ -55,14 +39,6 @@ jobs:
       - run:
           name: merge pull request base
           command: ./.circleci/merge_pr.sh
-      - run:
-          name: merge pull request base (2nd try)
-          command: ./.circleci/merge_pr.sh
-          when: on_fail
-      - run:
-          name: merge pull request base (3nd try)
-          command: ./.circleci/merge_pr.sh
-          when: on_fail
       - run:
           name: run tests
           command: pip install -r requirements-dev.txt && maturin develop && pytest
