@@ -7,7 +7,7 @@ jobs:
   core:
     <<: *common
     docker:
-      - image: davesque/rust-python:nightly-py37
+      - image: davesque/rust-python:nightly-xenial-py37
     steps:
       - checkout
       - run:
@@ -28,7 +28,7 @@ jobs:
   py36-integration:
     <<: *common
     docker:
-      - image: davesque/rust-python:nightly-py36
+      - image: davesque/rust-python:nightly-xenial-py36
     steps:
       - checkout
       - run:
@@ -49,7 +49,7 @@ jobs:
   py37-integration:
     <<: *common
     docker:
-      - image: davesque/rust-python:nightly-py37
+      - image: davesque/rust-python:nightly-xenial-py37
     steps:
       - checkout
       - run:
