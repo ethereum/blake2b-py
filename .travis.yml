@@ -29,7 +29,7 @@ install:
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       brew update
       # For python
-      brew install openssl xz
+      brew install openssl xz || true
 
       brew upgrade pyenv
       pyenv install --skip-existing 3.7.4
