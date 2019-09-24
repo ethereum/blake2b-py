@@ -1,0 +1,57 @@
+environment:
+  CARGO_HOME: "c:\\cargo"
+  RUSTUP_HOME: "c:\\rustup"
+  PYTHON: "C:\\Python37-x64"
+
+  global:
+    RUST_BACKTRACE: full
+
+  matrix:
+    - TARGET: x86_64-pc-windows-msvc
+
+matrix:
+  fast_finish: true
+
+cache:
+  - target -> Cargo.lock
+
+install:
+  - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain nightly
+  - SET PATH=%PATH%;%CARGO_HOME%\bin
+
+  # See https://github.com/PyO3/pyo3/blob/master/ci/appveyor/setup.ps1
+  - ps: |
+      $env:PATH="$env:PYTHON;$env:PYTHON\\Scripts;$env:PATH"
+
+      Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.msi"
+      Start-Process -FilePath "msiexec.exe" -ArgumentList "/i rust-nightly-$env:TARGET.msi INSTALLDIR=`"$((Get-Location).Path)\rust-nightly-$env:TARGET`" /quiet /qn /norestart" -Wait
+      $env:PATH="$env:PATH;$((Get-Location).Path)/rust-nightly-$env:TARGET/bin"
+
+      $pythonLocation = Invoke-Expression "python -c `"import sys; print(sys.base_prefix)`""
+      $env:LIBPATH = "$env:LIBPATH; $( Join-Path $pythonLocation "libs" )"
+
+  # From and for ring
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
+
+  - echo %PATH%
+  - echo %LIBPATH%
+  - rustc -V
+  - cargo -V
+
+  - python.exe -m pip install maturin
+
+build_script:
+  - maturin build --no-sdist -i "C:\Python36-x64\python.exe"
+  - maturin build --no-sdist -i "C:\Python37-x64\python.exe"
+
+after_build:
+  - ps: Get-ChildItem .\target\wheels\*.whl | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+branches:
+  only:
+    - master
+    # Matches version tags
+    - /^v\d+\.\d+\.\d+.*$/
+
+deploy: off
