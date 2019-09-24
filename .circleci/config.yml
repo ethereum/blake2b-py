@@ -1,7 +1,21 @@
-version: 2.0
+version: 2.1
 
 common: &common
   working_directory: ~/repo
+
+build_requirements: &build_requirements
+  requires:
+    - core
+    - py36-integration
+    - py37-integration
+  filters:
+    branches:
+      only:
+        - master
+    tags:
+      only:
+        # Only version tags
+        - /v(\d*)\.(\d*)\.(\d*).*/
 
 jobs:
   core:
@@ -43,6 +57,42 @@ jobs:
           name: run tests
           command: pip install -r requirements-dev.txt && maturin develop && pytest
 
+  linux-bdist-and-sdist:
+    <<: *common
+    docker:
+      - image: konstin2/maturin:master
+    steps:
+      - checkout
+      - run:
+          name: set rust toolchain to nightly
+          command: rustup default nightly
+      - run:
+          name: build
+          command: |
+            maturin build -i python3.6
+            maturin build -i python3.7
+      - store_artifacts:
+          path: ~/repo/target/wheels
+
+  macos-bdist:
+    <<: *common
+    macos:
+      xcode: "11.0"
+    steps:
+      - checkout
+      - run:
+          name: install rust nightly toolchain
+          command: |
+            curl https://sh.rustup.rs -sSf | sh
+            rustup default nightly
+      - run:
+          name: build
+          command: |
+            maturin build --no-sdist -i python3.6
+            maturin build --no-sdist -i python3.7
+      - store_artifacts:
+          path: ~/repo/target/wheels
+
 workflows:
   version: 2
   test:
@@ -50,3 +100,12 @@ workflows:
       - core
       - py36-integration
       - py37-integration
+  test-and-build:
+    jobs:
+      - core
+      - py36-integration
+      - py37-integration
+      - linux-bdist-and-sdist:
+          <<: *build_requirements
+      - macos-bdist:
+          <<: *build_requirements
