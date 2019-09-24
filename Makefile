@@ -43,7 +43,7 @@ collectwheels:
 	GITHUB_PROJECT=davesque/blake2b-py \
 		CIRCLE_JOB_NAME=linux-bdist-and-sdist \
 		OUTPUT_DIR=target/wheels \
-		./collectwheels.py
+		./ci/collectwheels.py
 
 .PHONY: publish
 publish:
