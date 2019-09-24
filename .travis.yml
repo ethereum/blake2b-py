@@ -1,13 +1,14 @@
 language: rust
 dist: xenial
 
-# https://gist.github.com/jkcclemens/000456ca646bd502cac0dbddcb8fa307
 cache:
   cargo: true
   directories:
     - /usr/local/Cellar
     - /usr/local/Homebrew
     - /Users/travis/.pyenv
+
+# https://gist.github.com/jkcclemens/000456ca646bd502cac0dbddcb8fa307
 before_cache:
   - rm -rfv target/debug/incremental
   - rm -rfv target/debug/.fingerprint/blake2b*
@@ -19,8 +20,8 @@ before_cache:
 matrix:
   fast_finish: true
   include:
-    #- os: linux
-    #  rust: nightly
+    - os: linux
+      rust: nightly
     - os: osx
       rust: nightly
 
@@ -39,29 +40,22 @@ install:
       export PATH="$HOME/.pyenv/versions/3.6.9/bin:$PATH"
       export PATH="$HOME/.pyenv/versions/3.7.4/bin:$PATH"
 
-      echo $PATH
-
       python3 -mpip install -r requirements-dev.txt
     fi
 
 script:
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      pwd
-      echo $HOME
-      echo $PATH
-
       maturin build --no-sdist -i python3.7
       maturin build --no-sdist -i python3.6
     fi
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      docker run --rm -v $(pwd):/io --entrypoint /bin/bash konstin2/maturin:master -c '
-      rustup default nightly
-      cd /io
-      maturin build -i python3.7
-      maturin build --no-sdist -i python3.6
-      '
+      docker run --rm -v $(pwd):/io --entrypoint /bin/bash konstin2/maturin:master -c \
+        'rustup default nightly
+        cd /io
+        maturin build -i python3.7
+        maturin build --no-sdist -i python3.6'
     fi
 
 branches:
