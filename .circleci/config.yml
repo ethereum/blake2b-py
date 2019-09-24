@@ -9,13 +9,10 @@ build_requirements: &build_requirements
     - py36-integration
     - py37-integration
   filters:
-    branches:
-      only:
-        - master
     tags:
       only:
         # Only version tags
-        - /v(\d*)\.(\d*)\.(\d*).*/
+        - /^v\d+\.\d+\.\d+.*$/
 
 jobs:
   core:
