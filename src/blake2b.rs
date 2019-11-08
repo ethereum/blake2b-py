@@ -215,8 +215,6 @@ pub fn F(
 
 #[cfg(test)]
 mod tests {
-    extern crate hex;
-
     use super::*;
 
     const FAST_EXAMPLES: &[(&str, &str)] = &[
