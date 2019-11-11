@@ -3,10 +3,6 @@ dist: xenial
 
 cache:
   cargo: true
-  directories:
-    - /usr/local/Cellar
-    - /usr/local/Homebrew
-    - /Users/travis/.pyenv
 
 # https://gist.github.com/jkcclemens/000456ca646bd502cac0dbddcb8fa307
 before_cache:
@@ -28,29 +24,29 @@ matrix:
 install:
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      brew update
-      # For python
-      brew install openssl xz || true
+      pip3 install --upgrade pip
+      pip3 install maturin
 
-      brew upgrade pyenv
+      brew update
+
+      # For python
+      brew install openssl xz pyenv || true
+      brew upgrade openssl xz pyenv || true
+
+      brew switch pyenv 1.2.15
+
       pyenv install --skip-existing 3.8.0
       pyenv install --skip-existing 3.7.5
       pyenv install --skip-existing 3.6.9
-
-      # Doing things the normal way doesn't seem to work
-      #
-      # v3.8 should *not* be at the front of the path since certain package
-      # versions aren't yet available for 3.8.
-      export PATH="$HOME/.pyenv/versions/3.8.0/bin:$PATH"
-      export PATH="$HOME/.pyenv/versions/3.7.5/bin:$PATH"
-      export PATH="$HOME/.pyenv/versions/3.6.9/bin:$PATH"
-
-      pip3 install maturin
     fi
 
 script:
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      export PATH="$HOME/.pyenv/versions/3.6.9/bin:$PATH"
+      export PATH="$HOME/.pyenv/versions/3.7.5/bin:$PATH"
+      export PATH="$HOME/.pyenv/versions/3.8.0/bin:$PATH"
+
       maturin build --no-sdist -i python3.8
       maturin build --no-sdist -i python3.7
       maturin build --no-sdist -i python3.6
