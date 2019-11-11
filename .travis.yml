@@ -33,28 +33,36 @@ install:
       brew install openssl xz || true
 
       brew upgrade pyenv
-      pyenv install --skip-existing 3.7.4
+      pyenv install --skip-existing 3.8.0
+      pyenv install --skip-existing 3.7.5
       pyenv install --skip-existing 3.6.9
 
       # Doing things the normal way doesn't seem to work
+      #
+      # v3.8 should *not* be at the front of the path since certain package
+      # versions aren't yet available for 3.8.
+      export PATH="$HOME/.pyenv/versions/3.8.0/bin:$PATH"
+      export PATH="$HOME/.pyenv/versions/3.7.5/bin:$PATH"
       export PATH="$HOME/.pyenv/versions/3.6.9/bin:$PATH"
-      export PATH="$HOME/.pyenv/versions/3.7.4/bin:$PATH"
 
-      python3 -mpip install -r requirements-dev.txt
+      pip3 install maturin
     fi
 
 script:
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      maturin build --no-sdist -i python3.8
       maturin build --no-sdist -i python3.7
       maturin build --no-sdist -i python3.6
     fi
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       docker run --rm -v $(pwd):/io --entrypoint /bin/bash konstin2/maturin:master -c \
-        'rustup default nightly
+        'export PATH=/opt/python/cp38-cp38/bin/:$PATH
+        rustup default nightly
         cd /io
-        maturin build -i python3.7
+        maturin build -i python3.8
+        maturin build --no-sdist -i python3.7
         maturin build --no-sdist -i python3.6'
     fi
 
