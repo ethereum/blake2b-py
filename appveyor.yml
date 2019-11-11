@@ -1,7 +1,7 @@
 environment:
   CARGO_HOME: "c:\\cargo"
   RUSTUP_HOME: "c:\\rustup"
-  PYTHON: "C:\\Python37-x64"
+  PYTHON: "C:\\Python38-x64"
 
   global:
     RUST_BACKTRACE: full
@@ -44,6 +44,7 @@ install:
 build_script:
   - maturin build --no-sdist -i "C:\Python36-x64\python.exe"
   - maturin build --no-sdist -i "C:\Python37-x64\python.exe"
+  - maturin build --no-sdist -i "C:\Python38-x64\python.exe"
 
 after_build:
   - ps: Get-ChildItem .\target\wheels\*.whl | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
