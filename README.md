@@ -47,3 +47,11 @@ make build-local
 
 You can also use the included Appveyor config to build the wheels in CI.  You
 can download any resulting build artifacts through the Appveyor web interface.
+
+### Releasing
+
+Gather your wheels and source distribution into your local `target/wheels`
+directory, then use the `publish` make target:
+```bash
+make publish
+```
