@@ -38,6 +38,20 @@ bumpversion:
 	git config commit.gpgSign "$(CURRENT_SIGN_SETTING)"
 	git push upstream && git push upstream --tags
 
+.PHONY: build-local
+build-local:
+	maturin build --release
+
+.PHONY: build-manylinux
+build-manylinux:
+	docker run --rm -v $(shell pwd):/io --entrypoint /bin/bash konstin2/maturin:master -c \
+		'export PATH=/opt/python/cp38-cp38/bin/:$$PATH; \
+		rustup default nightly; \
+		cd /io; \
+		maturin build -i python3.8; \
+		maturin build --no-sdist -i python3.7; \
+		maturin build --no-sdist -i python3.6;'
+
 .PHONY: collectwheels
 collectwheels:
 	GITHUB_PROJECT=davesque/blake2b-py \
