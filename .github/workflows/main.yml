@@ -24,10 +24,69 @@ jobs:
           command: test
           args: test_
 
+  test_python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install Python requirements
+        run: pip install tox tox-gh-actions
+
+      - name: test with tox
+        run: tox
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          default: true
+
+      - name: run rust tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: bench
+
+  test_rust_eip_152_vec_8:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          default: true
+
+      - name: run rust tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release test_f_compress_eip_152_vec_8 -- --ignored --nocapture
+
   build:
     runs-on: ${{ matrix.os }}
     needs:
       - test_rust
+      - test_python
+      - bench
+      - test_rust_eip_152_vec_8
     strategy:
       fail-fast: false
       matrix:
@@ -52,4 +111,4 @@ jobs:
         run: pip install maturin
 
       - name: build Python package
-        run: maturin build --release --interpreter python${{ matrix.python-version }}
+        run: maturin build --release --interpreter python
