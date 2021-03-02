@@ -6,8 +6,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test_rust:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -24,16 +28,6 @@ jobs:
           command: test
           args: test_
 
-  test_python:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-
       - name: set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -44,6 +38,7 @@ jobs:
 
       - name: test with tox
         run: tox -e py
+
 
   bench:
     runs-on: ubuntu-latest
@@ -83,8 +78,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     needs:
-      - test_rust
-      - test_python
+      - test
       - bench
       - test_rust_eip_152_vec_8
     strategy:
