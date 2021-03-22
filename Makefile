@@ -52,13 +52,6 @@ build-manylinux:
 		maturin build --no-sdist -i python3.7; \
 		maturin build --no-sdist -i python3.6;'
 
-.PHONY: collectwheels
-collectwheels:
-	GITHUB_PROJECT=davesque/blake2b-py \
-		CIRCLE_JOB_NAME=linux-bdist-and-sdist \
-		OUTPUT_DIR=target/wheels \
-		./ci/collectwheels.py
-
 .PHONY: publish
 publish:
 	twine upload target/wheels/*
