@@ -105,4 +105,19 @@ jobs:
         run: pip install maturin
 
       - name: build Python package
-        run: maturin build --release --interpreter python
+        run: maturin build --release --strip --interpreter python
+        # We run this job until here for every build so that we notice early if there's anything
+        # that would prevent to publish a release. But the actual publishing only happens when we
+        # create an actual Github release.
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: target/wheels/blake2b_py*.whl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: PyPi publish
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          MATURIN_PASSWORD: ${{ secrets.PYPI }}
+        run: maturin publish --no-sdist --username __token__ --interpreter python
