@@ -2,3 +2,5 @@
 **/*.rs.bk
 Cargo.lock
 .tox
+*.so
+.hypothesis
