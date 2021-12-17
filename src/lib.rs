@@ -2,7 +2,7 @@
 
 mod blake2b;
 
-use pyo3::exceptions::ValueError;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
@@ -29,7 +29,7 @@ fn decode_parameters(input: Vec<u8>) -> PyResult<CompressArgs> {
     let result = blake2b::decode_parameters(&input);
 
     match result {
-        Err(msg) => Err(ValueError::py_err(msg)),
+        Err(msg) => Err(PyValueError::new_err(msg)),
         Ok(args) => {
             let (rounds, state, block, offsets, flag) = args;
             Ok((
@@ -120,7 +120,7 @@ fn compress(
     );
 
     match result {
-        Err(msg) => Err(ValueError::py_err(msg)),
+        Err(msg) => Err(PyValueError::new_err(msg)),
         Ok(ok) => Ok(PyBytes::new(py, &ok).into()),
     }
 }
@@ -150,7 +150,7 @@ fn decode_and_compress(py: Python, input: Vec<u8>) -> PyResult<PyObject> {
     let result = _decode_and_compress(input);
 
     match result {
-        Err(msg) => Err(ValueError::py_err(msg)),
+        Err(msg) => Err(PyValueError::new_err(msg)),
         Ok(ok) => Ok(PyBytes::new(py, &ok).into()),
     }
 }
