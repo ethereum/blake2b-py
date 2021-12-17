@@ -204,8 +204,8 @@ pub fn F(
     ];
 
     let mut result = [0u8; 64];
-    for (i, word_bytes) in result_words.into_iter().enumerate() {
-        for (j, x) in word_bytes.into_iter().enumerate() {
+    for (i, word_bytes) in result_words.iter().enumerate() {
+        for (j, x) in word_bytes.iter().enumerate() {
             result[i * 8 + j] = *x;
         }
     }
