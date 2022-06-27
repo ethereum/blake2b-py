@@ -23,3 +23,19 @@ upstream repository.
 
 Packages are build and distributed via Github Actions as soon as a tag is
 pushed to the remote repository which is taken care of by the bumpversion command.
+
+### Developing
+
+You'll need to have [Maturin](https://pyo3.rs/v0.16.4/) installed on your machine.
+Create a virtual environment, and then you can do:
+
+```sh
+$ pip install maturin
+$ maturin develop
+```
+
+to install the dependencies.
+
+#### Run the tests
+
+Running `make test_all` will run all the tests.
