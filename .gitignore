@@ -3,3 +3,5 @@
 Cargo.lock
 .tox
 venv*
+*.so
+.hypothesis
