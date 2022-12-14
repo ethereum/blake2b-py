@@ -108,7 +108,7 @@ jobs:
           PYO3_CROSS_LIB_DIR: /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.8/lib
         run: |
           # Build wheels
-          maturin build --release --universal2 --out dist --no-sdist
+          maturin build --release --universal2 --out dist
           pip install blake2b-py --no-index --find-links dist --force-reinstall
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -145,7 +145,7 @@ jobs:
         run: pip install maturin
       - name: Build wheels
         run: |
-          maturin build --release --out dist --no-sdist --target ${{ matrix.platform.target }}
+          maturin build --release --out dist --target ${{ matrix.platform.target }}
           pip install blake2b-py --no-index --find-links dist --force-reinstall
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -176,7 +176,7 @@ jobs:
         source ~/.cargo/env
         export PATH=/opt/python/cp38-cp38/bin:$PATH
         pip install maturin
-        maturin build --release --out dist --no-sdist --target ${{ matrix.platform.target }} --manylinux ${{ matrix.platform.manylinux }}
+        maturin build --release --out dist --target ${{ matrix.platform.target }} --manylinux ${{ matrix.platform.manylinux }}
         ' > build-wheel.sh
         chmod +x build-wheel.sh
 
@@ -213,7 +213,7 @@ jobs:
         echo 'curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
         source ~/.cargo/env
         rustup target add ${{ matrix.platform.target }}
-        maturin build --release --out dist --no-sdist --target ${{ matrix.platform.target }} --manylinux ${{ matrix.platform.manylinux }}
+        maturin build --release --out dist --target ${{ matrix.platform.target }} --manylinux ${{ matrix.platform.manylinux }}
         ' > build-wheel.sh
         chmod +x build-wheel.sh
 
