@@ -115,7 +115,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: target/wheels/blake2b_py*.whl
+          files: |
+            target/wheels/blake2b_py*.whl
+            target/wheels/blake2b_py*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: PyPi publish
