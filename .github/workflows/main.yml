@@ -124,4 +124,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           MATURIN_PASSWORD: ${{ secrets.PYPI }}
-        run: maturin publish --sdist --username __token__ --interpreter python
+        run: maturin publish --username __token__ --interpreter python
