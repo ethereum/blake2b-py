@@ -3,3 +3,8 @@
 Cargo.lock
 .tox
 venv*
+
+.hypothesis
+
+*.so
+**/__pycache__

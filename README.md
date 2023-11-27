@@ -34,7 +34,8 @@ $ pip install maturin
 $ maturin develop
 ```
 
-to install the dependencies.
+to install the dependencies. You may need to specify the
+`MACOSX_DEPLOYMENT_TARGET` environment variable to your version of MacOS.
 
 #### Run the tests
 
