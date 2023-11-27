@@ -8,7 +8,7 @@ repository = "https://github.com/davesque/blake2b-py"
 description = "Blake2b hashing in Rust with Python bindings."
 
 [dependencies]
-pyo3 = { version = "~0.16", features = ["extension-module"] }
+pyo3 = { version = "~0.20", features = ["extension-module"] }
 
 [dev-dependencies]
 hex = "~0.4"
