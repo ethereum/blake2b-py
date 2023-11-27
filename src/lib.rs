@@ -159,6 +159,7 @@ fn decode_and_compress(py: Python, input: Vec<u8>) -> PyResult<PyObject> {
 }
 
 /// Functions for calculating blake2b hashes.
+#[pymodule]
 fn blake2b(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(decode_parameters))?;
     m.add_wrapped(wrap_pyfunction!(compress))?;
