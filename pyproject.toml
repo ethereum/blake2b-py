@@ -1,3 +1,13 @@
 [build-system]
 requires = ["maturin>=1.0,<2"]
 build-backend = "maturin"
+
+[tool.bumpversion]
+current_version = "0.3.0"
+commit = true
+tag = true
+
+[[tool.bumpversion.files]]
+filename = "Cargo.toml"
+search = "name = \"blake2b-py\"\nversion = \"{current_version}\""
+replace = "name = \"blake2b-py\"\nversion = \"{new_version}\""

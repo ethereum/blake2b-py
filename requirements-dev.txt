@@ -2,5 +2,5 @@ pytest
 pytest-benchmark
 hypothesis
 maturin
-bumpversion
+bump-my-version
 twine

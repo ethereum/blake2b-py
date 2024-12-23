@@ -31,10 +31,10 @@ clean:
 	rm -rf *.egg-info build dist target pip-wheel-metadata
 
 CURRENT_SIGN_SETTING := $(shell git config commit.gpgSign)
-.PHONY: bumpversion
-bumpversion:
+.PHONY: bump-my-version
+bump-my-version:
 	git config commit.gpgSign true
-	bumpversion $(bump)
+	bump-my-version $(bump)
 	git config commit.gpgSign "$(CURRENT_SIGN_SETTING)"
 	git push upstream && git push upstream --tags
 
