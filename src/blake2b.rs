@@ -15,7 +15,7 @@ const SIGMA: [[usize; 16]; SIGMA_LEN] = [
 ];
 
 const WORDBITS: usize = 64;
-const MASKBITS: u64 = u64::max_value();
+const MASKBITS: u64 = u64::MAX;
 
 const IV: [u64; 8] = [
     0x6a09e667f3bcc908,
@@ -132,11 +132,11 @@ fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) 
     // get them for free with u64 arithmetic.
     v[a] = v[a] + v[b] + x;
     v[d] = rotate_bits(v[d] ^ v[a], ROT1);
-    v[c] = v[c] + v[d];
+    v[c] += v[d];
     v[b] = rotate_bits(v[b] ^ v[c], ROT2);
     v[a] = v[a] + v[b] + y;
     v[d] = rotate_bits(v[d] ^ v[a], ROT3);
-    v[c] = v[c] + v[d];
+    v[c] += v[d];
     v[b] = rotate_bits(v[b] ^ v[c], ROT4);
 }
 
