@@ -132,11 +132,11 @@ fn G(v: &mut [u64; 16], a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) 
     // get them for free with u64 arithmetic.
     v[a] = v[a] + v[b] + x;
     v[d] = rotate_bits(v[d] ^ v[a], ROT1);
-    v[c] = v[c] + v[d];
+    v[c] += v[d];
     v[b] = rotate_bits(v[b] ^ v[c], ROT2);
     v[a] = v[a] + v[b] + y;
     v[d] = rotate_bits(v[d] ^ v[a], ROT3);
-    v[c] = v[c] + v[d];
+    v[c] += v[d];
     v[b] = rotate_bits(v[b] ^ v[c], ROT4);
 }
 
