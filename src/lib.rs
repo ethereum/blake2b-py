@@ -1,7 +1,4 @@
-#![cfg_attr(
-    test,
-    feature(test)
-)]
+#![cfg_attr(test, feature(test))]
 
 mod blake2b;
 
