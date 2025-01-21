@@ -34,7 +34,7 @@ CURRENT_SIGN_SETTING := $(shell git config commit.gpgSign)
 .PHONY: bump-my-version
 bump-my-version:
 	git config commit.gpgSign true
-	bump-my-version $(bump)
+	bump-my-version bump $(bump)
 	git config commit.gpgSign "$(CURRENT_SIGN_SETTING)"
 	git push upstream && git push upstream --tags
 
