@@ -3,7 +3,7 @@ requires = ["maturin>=1.0,<2"]
 build-backend = "maturin"
 
 [tool.bumpversion]
-current_version = "0.3.1"
+current_version = "0.3.2"
 commit = true
 tag = true
 
